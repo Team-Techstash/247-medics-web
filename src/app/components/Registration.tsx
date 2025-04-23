@@ -486,11 +486,11 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Sex</label>
                                             <div className="grid lg:grid-cols-2 gap-4">
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                                                    <input type="radio" name="sex" onChange={handleChange} value="male" className="mr-2" />
+                                                    <input type="radio" name="sex" checked={formData.sex === "male"} onChange={handleChange} value="male" className="mr-2" />
                                                     Male
                                                 </label>
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                                                    <input type="radio" name="sex" onChange={handleChange} value="female" className="mr-2" />
+                                                    <input type="radio" name="sex" checked={formData.sex === "female"} onChange={handleChange} value="female" className="mr-2" />
                                                     Female
                                                 </label>
                                             </div>
@@ -502,8 +502,16 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Your pronouns (optional)</label>
                                             <div className="grid lg:grid-cols-2 gap-4">
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                                                    <input type="radio" name="pronouns" onChange={handleChange} value="male" className="mr-2" />
+                                                    <input type="radio" name="pronouns" checked={formData.pronouns === "male"} onChange={handleChange} value="male" className="mr-2" />
                                                     Male
+                                                </label>
+                                                <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
+                                                    <input type="radio" name="pronouns" checked={formData.pronouns === "female"} onChange={handleChange} value="female" className="mr-2" />
+                                                    Female
+                                                </label>
+                                                <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
+                                                    <input type="radio" name="pronouns" checked={formData.attention === "other"} onChange={handleChange} value="other" className="mr-2" />
+                                                    Other
                                                 </label>
                                             </div>
                                         </div>
@@ -568,13 +576,7 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
 
                                 {currentStep > 1 && (
                                     <button onClick={prevStep} className="bg-primary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-secondary transition text-lg">
-                                        Back <Image
-                                            src="/images/btn-arrow.svg"
-                                            alt="24/7 Medics"
-                                            width={12}
-                                            height={13}
-                                            className="ms-3"
-                                        /></button>
+                                        Back </button>
                                 )}
 
                                 {currentStep < 4 && (
