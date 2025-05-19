@@ -10,27 +10,33 @@ import FAQWhatWeTreat from "./../components/FAQWhatWeTreat";
 
 import MainLayout from "./../layouts/MainLayout";
 import { authService } from "@/api/services/service";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { showToast } from '../../utils/toast';
 import Link from "next/link";
+import Cookies from 'js-cookie';
 
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [formData, setFormData] = useState({});
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (data: any) => {
         setFormData(data);
         setIsLoading(true);
-        console.log(data)
 
         try {
             const response = await authService.login(data);
             if (response && response.token) {
                 showToast.success('Login successful!');
+                // Store token in both cookie and localStorage for compatibility
+                Cookies.set('authToken', response.token, { expires: 7 }); // Expires in 7 days
                 localStorage.setItem("authToken", response.token);
-                router.push("/");
+                
+                // Redirect to the original requested page or home
+                const from = searchParams.get('from') || '/';
+                router.push(from);
             } else {
                 showToast.error(response.message || "Login failed");
             }

@@ -13,12 +13,17 @@ const API_BASE_URL = 'http://3.14.150.170:5000/api';
 async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
         const url = `${API_BASE_URL}/${endpoint}`;
+        const token = typeof window !== 'undefined' ? localStorage.getItem("authToken") : null;
+        
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...options.headers,
+        };
+
         const response = await fetch(url, {
             ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
+            headers,
         });
 
         const data = await response.json().catch(() => ({}));
@@ -55,16 +60,32 @@ export const authService = {
 };
 
 export const appointmentsService = {
-
     create: async (data: any): Promise<any> => {
-        const token = localStorage.getItem("authToken");
         return apiCall(APPOINTMENTS_ROUTES.CREATE, {
             method: 'POST',
             body: JSON.stringify(data),
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
+        });
+    },
+
+    getAppointments: async (status?: string, sort?: string): Promise<any> => {
+        let url = APPOINTMENTS_ROUTES.GET_APPOINTMENTS;
+        const queryParams = new URLSearchParams();
+        
+        if (status) queryParams.append('status', status);
+        if (sort) queryParams.append('sort', sort);
+        
+        if (queryParams.toString()) {
+            url += `?${queryParams.toString()}`;
+        }
+
+        return apiCall(url, {
+            method: 'GET',
+        });
+    },
+
+    getAppointmentById: async (id: string): Promise<any> => {
+        return apiCall(APPOINTMENTS_ROUTES.GET_APPOINTMENT_BY_ID(id), {
+            method: 'GET',
         });
     },
 };

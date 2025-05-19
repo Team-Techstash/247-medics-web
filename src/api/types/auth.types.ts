@@ -48,6 +48,7 @@ export interface LoginResponse extends ApiResponse {
         token: string;
         user: User;
     };
+    token?: string;
 }
 
 export interface RegisterResponse extends ApiResponse {

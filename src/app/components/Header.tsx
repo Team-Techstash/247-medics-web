@@ -1,13 +1,14 @@
 "use client"; // Ensure this runs on the client side
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import Button2 from "./Button2";
 import { Menu, X, User, Search } from "lucide-react";
 import { showToast } from "@/utils/toast";
+import Cookies from 'js-cookie';
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +16,7 @@ const Header = () => {
     const [authToken, setAuthToken] = useState<string | null>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const router = useRouter();
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -25,9 +27,11 @@ const Header = () => {
 
     const handleLogout = () => {
         localStorage.removeItem("authToken");
+        Cookies.remove("authToken");
         setAuthToken(null);
         setShowDropdown(false);
-        showToast.success("Logged out successfully")
+        showToast.success("Logged out successfully");
+        router.push("/");
     };
 
     const handleSearch = (e: React.FormEvent) => {
@@ -47,6 +51,7 @@ const Header = () => {
         { href: "/what-we-treat", label: "What we treat" },
         { href: "/online-doctor", label: "Online doctor" },
         { href: "/prices", label: "Prices" },
+        ...(authToken ? [{ href: "/appointments", label: "My Appointments" }] : []),
     ];
 
     return (
