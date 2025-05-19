@@ -5,7 +5,10 @@ import Image from "next/image";
 import Button from "./Button";
 import Button3 from "./Button3";
 import Link from "next/link";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { addDays } from "date-fns";
+
+
 
 const sections = [
     {
@@ -186,39 +189,59 @@ const sections = [
 
 interface FormData {
     age: number,
-    attention: string,
-    location: string,
-    helpText: string,
+    isForSelf: boolean,
+    status: string,
+    country: string,
     city: string,
+    serviceType: string,
     fname: string,
     lname: string,
     sex: string,
     pronouns: string,
-    appointmentOffers: string,
     email: string,
+    visitType: string,
+    appointmentMode: string,
+    reason: string,
 }
 
 type RegistrationProps = {
-    onFormUpdate: (formData: any) => void;
+    onSubmit: (formData: any) => void;
 };
 
-export default function Registration({ onFormUpdate }: RegistrationProps) {
+export default function Registration({ onSubmit }: RegistrationProps) {
     const [currentStep, setCurrentStep] = useState(1);
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
     const [selected, setSelected] = useState<string | null>(null);
+    const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+    const [startDate, endDate] = dateRange;
+
+    const [authToken, setAuthToken] = useState<string | null>(null);
+
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const token = localStorage.getItem("authToken");
+            setAuthToken(token);
+        }
+    }, []);
+
+
 
     const [formData, setFormData] = useState<FormData>({
         age: 0,
-        attention: '',
-        location: '',
-        helpText: '',
+        isForSelf: true,
+        status: 'requested',
+        country: 'USA',
         city: '',
+        serviceType: '',
         fname: '',
         lname: '',
         sex: '',
         pronouns: '',
-        appointmentOffers: '',
         email: '',
+        visitType: 'urgent-care',
+        appointmentMode: 'Video',
+        reason: ''
     });
 
 
@@ -236,7 +259,6 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        onFormUpdate(formData);
 
     };
     const handleSubmit = async (e) => {
@@ -245,6 +267,8 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
         if (Object.keys(stepErrors).length !== 0) {
             return;
         }
+        onSubmit(formData);
+
         console.log(formData)
     };
 
@@ -253,30 +277,29 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
         console.log("called")
         if (currentStep === 1) {
             console.log('Step 1 validation');
-            if (formData.attention == '') stepErrors.attention = "Please select who requires attention.";
-            if (formData.age === undefined || formData.age === null || formData.age === 0) {
-                stepErrors.age = "Age is required.";
-            }
-            if (!formData.location) stepErrors.location = "Location is required.";
-            if (!formData.helpText) stepErrors.helpText = "Please describe the issue.";
+            // if (formData.isForSelf == null) stepErrors.isForSelf = "Please select who requires attention.";
+
+            if (!formData.reason) stepErrors.reason = "Please describe the issue.";
         }
 
         if (currentStep === 2) {
             if (!formData.city) stepErrors.city = "City is required.";
+            if (!formData.country) stepErrors.country = "Country is required.";
+            if (!formData.serviceType) stepErrors.serviceType = "Service Type is required.";
         }
 
         if (currentStep === 3) {
             if (!formData.fname) stepErrors.fname = "First name is required.";
             if (!formData.lname) stepErrors.lname = "Last name is required.";
-            if (!formData.sex) stepErrors.sex = "Please select your sex.";
-        }
-
-        if (currentStep === 4) {
             if (!formData.email) {
                 stepErrors.email = "Email is required.";
             } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
                 stepErrors.email = "Please enter a valid email address.";
-            } if (!formData.appointmentOffers) stepErrors.appointmentOffers = "Please select.";
+            }
+            if (formData.age === undefined || formData.age === null || formData.age === 0) {
+                stepErrors.age = "Age is required.";
+            }
+            if (!formData.sex) stepErrors.sex = "Please select your sex.";
         }
 
         setErrors({ ...stepErrors });
@@ -321,73 +344,32 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                             <form onSubmit={handleSubmit}>
                                 {currentStep === 1 && (
                                     <div className=""> {/*Step 1*/}
-                                        <div className="mb-8">
+                                        {/* <div className="mb-8">
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Who requires medical attention?</label>
                                             <div className="grid lg:grid-cols-2 gap-4">
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                                                    <input type="radio" checked={formData.attention === "me"}
-                                                        onChange={handleChange} name="attention" value="me" className="mr-2" />
+                                                    <input type="radio" checked={formData.isForSelf === true}
+                                                        onChange={() => setFormData({ ...formData, isForSelf: true })} name="isForSelf" value="me" className="mr-2" />
                                                     Me
                                                 </label>
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 text-sm 2xl:text-lg">
-                                                    <input type="radio" checked={formData.attention === "someone-else"}
-                                                        onChange={handleChange} name="attention" value="someone-else" className="mr-2" />
+                                                    <input type="radio" checked={formData.isForSelf === false}
+                                                        onChange={() => setFormData({ ...formData, isForSelf: false })} name="attention" value="someone-else" className="mr-2" />
                                                     Someone else
                                                 </label>
                                             </div>
-                                            {errors.attention && (
-                                                <p className="text-red-500 !text-sm mt-2">{errors.attention}</p>
+                                            {errors.isForSelf && (
+                                                <p className="text-red-500 !text-sm mt-2">{errors.isForSelf}</p>
                                             )}
-                                        </div>
-                                        <div className="mb-8">
-                                            <div className="grid lg:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">How old are you?</label>
-                                                    <input type="text" value={formData.age}
-                                                        onChange={handleChange} name="age" className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg" />
-                                                    {errors.age && (
-                                                        <p className="text-red-500 !text-sm mt-2">{errors.age}</p>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Location?</label>
-                                                    <div className="relative">
-                                                        <select name="location" value={formData.location}
-                                                            onChange={handleChange} className="w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 outline-0 appearance-none text-sm 2xl:text-lg">
-                                                            <option value='' disabled>Select Location</option>
-                                                            <option value="Texas City, TX, USA">Texas City, TX, USA</option>
-                                                            <option value="Texas, QLD, Australia">Texas, QLD, Australia</option>
-                                                            <option value="Texas, San Luis Potosi, Mexico">Texas, San Luis Potosi, Mexico</option>
-                                                            <option value="Texas Creek, CO, USA">Texas Creek, CO, USA</option>
-                                                        </select>
-                                                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                className="h-5 w-5 text-primary"
-                                                                viewBox="0 0 20 20"
-                                                                fill="currentColor"
-                                                            >
-                                                                <path
-                                                                    fillRule="evenodd"
-                                                                    d="M5.292 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                                    clipRule="evenodd"
-                                                                />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                    {errors.location && (
-                                                        <p className="text-red-500 !text-sm mt-2">{errors.location}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        </div> */}
+
                                         <div className="mb-8">
                                             <div className="mb-3">
                                                 <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">How can the doctor help you?</label>
-                                                <textarea name="helpText" value={formData.helpText}
+                                                <textarea name="reason" value={formData.reason}
                                                     onChange={handleChange} className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg" rows={4}></textarea>
-                                                {errors.helpText && (
-                                                    <p className="text-red-500 !text-sm mt-2">{errors.helpText}</p>
+                                                {errors.reason && (
+                                                    <p className="text-red-500 !text-sm mt-2">{errors.reason}</p>
                                                 )}
                                             </div>
                                             <small className="block">
@@ -396,7 +378,7 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                                 details.
                                             </small>
                                         </div>
-                                        <div className="mb-8">
+                                        {/* <div className="mb-8">
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">What brings you in?</label>
                                             <div className="flex flex-col gap-4">
                                                 <div onClick={() => setSelected('urgent')} className={`border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 font-semibold flex justify-between items-center  ${selected === 'urgent' ? 'bg-primary/[.1] border' : 'bg-white'
@@ -426,12 +408,14 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="mb-8">
-                                                <div className="mb-3">
-                                                    <p>Already have an account? <Link href="/" className="underline">Log in</Link></p>
+                                            {!authToken && <div className="mb-8">
+                                                <div className="mt-3">
+                                                    <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
                                                 </div>
                                             </div>
-                                        </div>
+                                            }
+
+                                        </div> */}
                                     </div>
                                 )}
                                 {currentStep === 2 && (
@@ -451,9 +435,47 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                         </div>
                                         <div className="mb-8">
                                             <div className="mb-3">
-                                                <p>Already have an account? <Link href="/" className="underline">Log in</Link></p>
+                                                <label className="block mb-3 font-semibold text-sm 2xl:text-lg">
+                                                    Which type of healthcare service do you need?
+                                                </label>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {[
+                                                        'Primary Care',
+                                                        'Pediatrics',
+                                                        'Dermatology',
+                                                        'Mental Health'
+                                                    ].map((type) => (
+                                                        <label
+                                                            key={type}
+                                                            className={`cursor-pointer rounded-full px-5 py-2 text-sm 2xl:text-lg transition-all ${formData.serviceType === type
+                                                                ? "bg-[#9904A160] text-black"
+                                                                : "bg-gray-200 text-black"
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="serviceType"
+                                                                value={type}
+                                                                checked={formData.serviceType === type}
+                                                                onChange={handleChange}
+                                                                className="hidden"
+                                                            />
+                                                            {type}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                {errors.serviceType && (
+                                                    <p className="text-red-500 !text-sm mt-2">{errors.serviceType}</p>
+                                                )}
                                             </div>
                                         </div>
+
+                                        {!authToken && <div className="mb-8">
+                                            <div className="mt-3">
+                                                <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
+                                            </div>
+                                        </div>
+                                        }
                                     </div>
                                 )}
                                 {currentStep === 3 && (
@@ -481,6 +503,31 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                             <small className="block">
                                                 Use your real name to ensure proper care. Your details are shared only with the doctor you choose to book with.
                                             </small>
+                                        </div>
+                                        <div className="mb-8">
+                                            <div className="mb-3">
+                                                <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Email address:</label>
+                                                <div>
+                                                    <input type="text" name="email" value={formData.email}
+                                                        onChange={handleChange} placeholder="e.g. john@example.com" className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg" />
+                                                    {errors.email && (
+                                                        <p className="text-red-500 !text-sm mt-2">{errors.email}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <small className="block">
+                                                Your doctor will send prescription and invoice here Please enter a valid email address
+                                            </small>
+                                        </div>
+                                        <div className="mb-8">
+                                            <div>
+                                                <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">How old are you?</label>
+                                                <input type="text" value={formData.age}
+                                                    onChange={handleChange} name="age" className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg" />
+                                                {errors.age && (
+                                                    <p className="text-red-500 !text-sm mt-2">{errors.age}</p>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="mb-8">
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Sex</label>
@@ -515,16 +562,17 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                                 </label>
                                             </div>
                                         </div>
-                                        <div className="mb-8">
-                                            <div className="mb-3">
-                                                <p>Already have an account? <Link href="/" className="underline">Log in</Link></p>
+                                        {!authToken && <div className="mb-8">
+                                            <div className="mt-3">
+                                                <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
                                             </div>
                                         </div>
+                                        }
                                     </div>
                                 )}
 
-                                {currentStep === 4 && (
-                                    <div className=""> {/*Step 5*/}
+                                {/* {currentStep === 4 && (
+                                    <div className=""> 
                                         <div className="mb-8">
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">How do you want to receive real-time appointment offers?</label>
                                             <div className="flex flex-col gap-4 mb-3">
@@ -540,35 +588,21 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                             <small className="block">
                                                 Choose your preferred way of receiving appointment offers and updates on your visit
                                             </small>
-                                            {errors.appointmentOffers && (
-                                                <p className="text-red-500 !text-sm mt-2">{errors.appointmentOffers}</p>
-                                            )}
                                         </div>
-                                        <div className="mb-8">
-                                            <div className="mb-3">
-                                                <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Email address:</label>
-                                                <div>
-                                                    <input type="text" name="email" value={formData.email}
-                                                        onChange={handleChange} placeholder="e.g. john@example.com" className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg" />
-                                                    {errors.email && (
-                                                        <p className="text-red-500 !text-sm mt-2">{errors.email}</p>
-                                                    )}
+
+                                        {!authToken &&
+                                            <div className="mb-8">
+                                                <div className="mt-3">
+                                                    <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">How do you wish to proceed?</label>
+                                                    <p className="mb-3">By creating an account, you can manage your appointments and requests with your personal account, and it eliminates the need to re-enter your details in future requests.</p>
+                                                    <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
+
                                                 </div>
                                             </div>
-                                            <small className="block">
-                                                Your doctor will send prescription and invoice here Please enter a valid email address
-                                            </small>
-                                        </div>
-                                        <div className="mb-8">
-                                            <div className="mb-3">
-                                                <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">How do you wish to proceed?</label>
-                                                <p className="mb-3">By creating an account, you can manage your appointments and requests with your personal account, and it eliminates the need to re-enter your details in future requests.</p>
-                                                <p>Already have an account? <Link href="/" className="underline">Log in</Link></p>
+                                        }
 
-                                            </div>
-                                        </div>
                                     </div>
-                                )}
+                                )} */}
                             </form>
                         </div>
                         <div className="my-4">
@@ -579,7 +613,7 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                         Back </button>
                                 )}
 
-                                {currentStep < 4 && (
+                                {currentStep < 3 && (
                                     <button onClick={nextStep} className="bg-primary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-secondary transition text-lg ml-auto">
                                         Next <Image
                                             src="/images/btn-arrow.svg"
@@ -590,7 +624,7 @@ export default function Registration({ onFormUpdate }: RegistrationProps) {
                                         /></button>
                                 )}
 
-                                {currentStep === 4 && (
+                                {currentStep === 3 && (
                                     <button type="submit" onClick={handleSubmit} className="bg-primary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-secondary transition text-lg">
                                         Submit <Image
                                             src="/images/btn-arrow.svg"
