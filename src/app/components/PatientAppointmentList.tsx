@@ -129,42 +129,39 @@ export default function PatientAppointmentList() {
                                 placeholder="Search appointments..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
                             />
                         </div>
                         <div className="flex gap-2 items-center">
+                            <div className="flex border border-gray-200 rounded-md overflow-hidden">
+                                <button
+                                    onClick={() => setActiveTab('upcoming')}
+                                    className={`px-4 py-2 text-md font-medium ${
+                                        activeTab === 'upcoming'
+                                            ? 'bg-pink-500 text-white'
+                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Upcoming
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('completed')}
+                                    className={`px-4 py-2 text-md font-medium ${
+                                        activeTab === 'completed'
+                                            ? 'bg-pink-500 text-white'
+                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Completed
+                                </button>
+                            </div>
                             <input
                                 type="date"
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
                             />
                         </div>
-                    </div>
-                    {/* Tabs Row */}
-                    <div className="flex border-b border-gray-200 bg-transparent mb-4">
-                        <button
-                            onClick={() => setActiveTab('upcoming')}
-                            className={`w-1/2 pb-2 text-base font-medium focus:outline-none transition-colors duration-150 text-center ${
-                                activeTab === 'upcoming'
-                                    ? 'text-primary border-b-2 border-primary'
-                                    : 'text-black border-b-2 border-transparent hover:text-primary'
-                            }`}
-                            style={{ background: 'none' }}
-                        >
-                            Upcoming
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('completed')}
-                            className={`w-1/2 pb-2 text-base font-medium focus:outline-none transition-colors duration-150 text-center ${
-                                activeTab === 'completed'
-                                    ? 'text-primary border-b-2 border-primary'
-                                    : 'text-black border-b-2 border-transparent hover:text-primary'
-                            }`}
-                            style={{ background: 'none' }}
-                        >
-                            Completed
-                        </button>
                     </div>
 
                     {/* Table */}
