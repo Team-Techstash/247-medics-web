@@ -50,9 +50,6 @@ export default function LoginPage() {
     return (
         <>
             <Login onSubmit={handleSubmit} isLoading={isLoading} />
-            <Link href="/forgot-password" className="font-medium text-primary hover:text-secondary/80">
-                Forgot password?
-            </Link>
         </>
     );
 }

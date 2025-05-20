@@ -110,7 +110,7 @@ export default function Login({ onSubmit, isLoading }: LoginProps) {
                                             autoComplete="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary"
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
                                     </div>
                                     {errors.email && <p className="text-red-600 !text-xs mt-1">{errors.email}</p>}
@@ -128,7 +128,7 @@ export default function Login({ onSubmit, isLoading }: LoginProps) {
                                             autoComplete="current-password"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary"
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
                                     </div>
                                     {errors.password && <p className="text-red-600 !text-xs mt-1">{errors.password}</p>}
@@ -140,7 +140,7 @@ export default function Login({ onSubmit, isLoading }: LoginProps) {
                                             id="remember-me"
                                             name="remember-me"
                                             type="checkbox"
-                                            className="h-4 w-4 text-secondary focus:ring-secondary border-gray-300 rounded"
+                                            className="h-4 w-4 text-secondary focus:ring-primary border-primary rounded hover:bg-primary/[.1]"
                                         />
                                         <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                                             Remember me
@@ -148,7 +148,7 @@ export default function Login({ onSubmit, isLoading }: LoginProps) {
                                     </div>
 
                                     <div className="text-sm">
-                                        <Link href="/auth/forgot-password" className="font-medium text-secondary hover:text-secondary/80">
+                                        <Link href="/forgot-password" className="font-medium text-secondary hover:text-secondary/80">
                                             Forgot your password?
                                         </Link>
                                     </div>

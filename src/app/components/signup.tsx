@@ -161,7 +161,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                                 type="text"
                                                 value={formData.firstName}
                                                 onChange={handleChange}
-                                                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary"
+                                                className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                             />
                                         </div>
                                         {errors.firstName && <div className="text-red-600 text-xs mt-1">{errors.firstName}</div>}
@@ -178,7 +178,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                                 type="text"
                                                 value={formData.lastName}
                                                 onChange={handleChange}
-                                                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary"
+                                                className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                             />
                                         </div>
                                         {errors.lastName && <div className="text-red-600 text-xs mt-1">{errors.lastName}</div>}
@@ -197,7 +197,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                             autoComplete="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary"
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
                                     </div>
                                     {errors.email && <div className="text-red-600 text-xs mt-1">{errors.email}</div>}
@@ -214,7 +214,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                             type="tel"
                                             value={formData.phone}
                                             onChange={handleChange}
-                                            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary"
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
                                     </div>
                                     {errors.phone && <div className="text-red-600 text-xs mt-1">{errors.phone}</div>}
@@ -231,7 +231,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                             type="password"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-secondary focus:border-secondary"
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
                                     </div>
                                     {errors.password && <div className="text-red-600 text-xs mt-1">{errors.password}</div>}

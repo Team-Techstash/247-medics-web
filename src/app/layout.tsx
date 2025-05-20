@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 const ubuntu = Ubuntu({
-    subsets: ["latin"],
-    weight: ["300", "400", "500", "700"], // Add required font weights
-    variable: "--font-ubuntu", // Define a CSS variable
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"], // Add required font weights
+  variable: "--font-ubuntu", // Define a CSS variable
 });
 
 export const metadata: Metadata = {
@@ -34,7 +34,36 @@ export default function RootLayout({
       <body
         className={`${ubuntu.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster position="top-right" />
+        <Toaster
+          toastOptions={{
+            success: {
+              iconTheme: {
+                primary: '#9904A1',
+                secondary: '#E0F2FE',
+              },
+              style: {
+                border: '1px solid primary',
+                padding: '12px 16px',
+                color: '#1E3A8A',
+              },
+            },
+            error: {
+              style: {
+                border: '1px solid #EF4444',
+                padding: '12px 16px',
+                color: '#991B1B',
+              },
+            },
+            loading: {
+              style: {
+                border: '1px solid #FBBF24',
+                padding: '12px 16px',
+                color: '#92400E',
+              },
+            },
+          }}
+          position="top-right"
+        />
         {children}
       </body>
     </html>

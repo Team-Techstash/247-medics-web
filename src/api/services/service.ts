@@ -50,6 +50,20 @@ export const authService = {
         });
     },
 
+    forgotPassword: async (data: any): Promise<any> => {
+        return apiCall(AUTH_ROUTES.FORGOT_PASSWORD, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    resetPassword: async (token: any, password: string): Promise<any> => {
+        return apiCall(AUTH_ROUTES.RESET_PASSWORD(token), {
+            method: 'POST',
+            body: JSON.stringify(password),
+        });
+    },
+
     // Register with email
     register: async (data: any): Promise<RegisterResponse> => {
         return apiCall(AUTH_ROUTES.REGISTER.EMAIL, {
@@ -88,4 +102,16 @@ export const appointmentsService = {
             method: 'GET',
         });
     },
+//    getById: async (id: string): Promise<any> => {
+//     const token = localStorage.getItem("authToken");
+//     const endpoint = `${APPOINTMENTS_ROUTES.GET_APPOINTMENT_BY_ID}${id}`;
+//     return apiCall(endpoint, {
+//         method: 'GET',
+//         headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//         },
+//     });
+// },
+
 };

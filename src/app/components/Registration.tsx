@@ -231,7 +231,7 @@ export default function Registration({ onSubmit }: RegistrationProps) {
         age: 0,
         isForSelf: true,
         status: 'requested',
-        country: 'USA',
+        country: 'UK',
         city: '',
         serviceType: '',
         fname: '',

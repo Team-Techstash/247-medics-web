@@ -3,7 +3,9 @@ export const AUTH_ROUTES = {
     LOGIN: {
         EMAIL: 'users/email-login',
     },
-    
+
+    FORGOT_PASSWORD: 'users/forgot-password',
+    RESET_PASSWORD: (token: string) => `users/reset-password/${token}`,
     // Registration routes
     REGISTER: {
         EMAIL: 'users/email-signup',

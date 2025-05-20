@@ -31,7 +31,7 @@ export default function RegistrationPage() {
               if (response && response.success) {
                   showToast.success("Appointment created successfully!");
                   console.log(response)
-                  router.push("/find");
+                 router.push(`/find?id=${response.data._id}`);
               } else {
                  showToast.error(response.message || "Failed to create appointment.");
               }
