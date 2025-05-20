@@ -24,20 +24,13 @@ interface Appointment {
     };
 }
 
-const STATUS_OPTIONS = [
-    { value: "", label: "All" },
-    { value: "requested", label: "Requested" },
-    { value: "pending", label: "Pending" },
-    { value: "confirmed", label: "Confirmed" },
-    { value: "in-progress", label: "In Progress" },
-    { value: "completed", label: "Completed" },
-];
+type TabType = 'upcoming' | 'completed';
 
 export default function PatientAppointmentList() {
     const router = useRouter();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [activeTab, setActiveTab] = useState<TabType>('upcoming');
     const [dateFilter, setDateFilter] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -47,13 +40,13 @@ export default function PatientAppointmentList() {
     useEffect(() => {
         fetchAppointments();
         // eslint-disable-next-line
-    }, [statusFilter, dateFilter]);
+    }, [dateFilter]);
 
     const fetchAppointments = async () => {
         try {
             setLoading(true);
             const response = await appointmentsService.getAppointments(
-                statusFilter || undefined,
+                undefined,
                 '-scheduledAt'
             );
             // Map the data to flatten patient info
@@ -82,7 +75,11 @@ export default function PatientAppointmentList() {
         const matchesSearch =
             appointment.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             appointment.phone?.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
+        
+        const isCompleted = appointment.status === 'completed';
+        const matchesTab = activeTab === 'completed' ? isCompleted : !isCompleted;
+        
+        return matchesSearch && matchesTab;
     });
 
     // Pagination logic
@@ -136,17 +133,6 @@ export default function PatientAppointmentList() {
                             />
                         </div>
                         <div className="flex gap-2 items-center">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                {STATUS_OPTIONS.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>
-                                        {opt.label}
-                                    </option>
-                                ))}
-                            </select>
                             <input
                                 type="date"
                                 value={dateFilter}
@@ -154,6 +140,31 @@ export default function PatientAppointmentList() {
                                 className="px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
+                    </div>
+                    {/* Tabs Row */}
+                    <div className="flex border-b border-gray-200 bg-transparent mb-4">
+                        <button
+                            onClick={() => setActiveTab('upcoming')}
+                            className={`w-1/2 pb-2 text-base font-medium focus:outline-none transition-colors duration-150 text-center ${
+                                activeTab === 'upcoming'
+                                    ? 'text-primary border-b-2 border-primary'
+                                    : 'text-black border-b-2 border-transparent hover:text-primary'
+                            }`}
+                            style={{ background: 'none' }}
+                        >
+                            Upcoming
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('completed')}
+                            className={`w-1/2 pb-2 text-base font-medium focus:outline-none transition-colors duration-150 text-center ${
+                                activeTab === 'completed'
+                                    ? 'text-primary border-b-2 border-primary'
+                                    : 'text-black border-b-2 border-transparent hover:text-primary'
+                            }`}
+                            style={{ background: 'none' }}
+                        >
+                            Completed
+                        </button>
                     </div>
 
                     {/* Table */}
