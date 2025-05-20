@@ -220,10 +220,10 @@ export default function PatientAppointmentList() {
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <button
                                                     onClick={() => router.push(`/appointments/${appointment._id}`)}
-                                                    className="text-blue-500 hover:text-blue-700"
+                                                    className="text-[#9904A1] hover:text-[#9904A1]"
                                                     title="View Details"
                                                 >
-                                                    <MdInfoOutline className="text-blue-500 text-xl" />
+                                                    <MdInfoOutline className="text-[#9904A1] text-xl" />
                                                 </button>
                                             </td>
                                         </tr>
