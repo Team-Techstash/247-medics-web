@@ -24,20 +24,13 @@ interface Appointment {
     };
 }
 
-const STATUS_OPTIONS = [
-    { value: "", label: "All" },
-    { value: "requested", label: "Requested" },
-    { value: "pending", label: "Pending" },
-    { value: "confirmed", label: "Confirmed" },
-    { value: "in-progress", label: "In Progress" },
-    { value: "completed", label: "Completed" },
-];
+type TabType = 'upcoming' | 'completed';
 
 export default function PatientAppointmentList() {
     const router = useRouter();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [activeTab, setActiveTab] = useState<TabType>('upcoming');
     const [dateFilter, setDateFilter] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -47,13 +40,13 @@ export default function PatientAppointmentList() {
     useEffect(() => {
         fetchAppointments();
         // eslint-disable-next-line
-    }, [statusFilter, dateFilter]);
+    }, [dateFilter]);
 
     const fetchAppointments = async () => {
         try {
             setLoading(true);
             const response = await appointmentsService.getAppointments(
-                statusFilter || undefined,
+                undefined,
                 '-scheduledAt'
             );
             // Map the data to flatten patient info
@@ -82,7 +75,11 @@ export default function PatientAppointmentList() {
         const matchesSearch =
             appointment.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             appointment.phone?.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
+        
+        const isCompleted = appointment.status === 'completed';
+        const matchesTab = activeTab === 'completed' ? isCompleted : !isCompleted;
+        
+        return matchesSearch && matchesTab;
     });
 
     // Pagination logic
@@ -132,26 +129,37 @@ export default function PatientAppointmentList() {
                                 placeholder="Search appointments..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
                             />
                         </div>
                         <div className="flex gap-2 items-center">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                {STATUS_OPTIONS.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>
-                                        {opt.label}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="flex border border-gray-200 rounded-md overflow-hidden">
+                                <button
+                                    onClick={() => setActiveTab('upcoming')}
+                                    className={`px-4 py-2 text-md font-medium ${
+                                        activeTab === 'upcoming'
+                                            ? 'bg-pink-500 text-white'
+                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Upcoming
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('completed')}
+                                    className={`px-4 py-2 text-md font-medium ${
+                                        activeTab === 'completed'
+                                            ? 'bg-pink-500 text-white'
+                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Completed
+                                </button>
+                            </div>
                             <input
                                 type="date"
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
                             />
                         </div>
                     </div>
@@ -212,10 +220,10 @@ export default function PatientAppointmentList() {
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <button
                                                     onClick={() => router.push(`/appointments/${appointment._id}`)}
-                                                    className="text-blue-500 hover:text-blue-700"
+                                                    className="text-[#9904A1] hover:text-[#9904A1]"
                                                     title="View Details"
                                                 >
-                                                    <MdInfoOutline className="text-blue-500 text-xl" />
+                                                    <MdInfoOutline className="text-[#9904A1] text-xl" />
                                                 </button>
                                             </td>
                                         </tr>
