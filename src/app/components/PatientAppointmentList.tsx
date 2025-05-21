@@ -8,18 +8,14 @@ import Footer from './Footer';
 import { MdInfoOutline } from 'react-icons/md';
 import { FaInfoCircle } from 'react-icons/fa';
 import { FaVideo } from 'react-icons/fa';
-import dynamic from 'next/dynamic';
-
-// Dynamically import VideoConsultation component with no SSR
-const VideoConsultation = dynamic(
-  () => import('../video-consultation/VideoConsultation'),
-  { ssr: false }
-);
+import JoinVideoButton from './JoinVideoButton';
 
 interface Appointment {
     _id: string;
     status: string;
     createdAt: string;
+    email?: string;
+    phone?: string;
     doctorId?: {
         firstName: string;
         lastName: string;
@@ -43,8 +39,6 @@ export default function PatientAppointmentList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);
-    const [showVideoConsultation, setShowVideoConsultation] = useState(false);
-    const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
     const rowsPerPage = 10;
 
     useEffect(() => {
@@ -120,43 +114,6 @@ export default function PatientAppointmentList() {
         }
     };
 
-    const handleStartVideoConsultation = async (appointmentId: string) => {
-        try {
-            // Get the auth token from localStorage
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                throw new Error('Not authenticated');
-            }
-
-            // Call the join endpoint with POST method and auth token
-            const response = await fetch(`http://3.14.150.170:5000/api/appointments/join/${appointmentId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-            });
-            
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Authentication failed. Please login again.');
-                }
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to join video consultation');
-            }
-            
-            const data = await response.json();
-            console.log('Video consultation join response:', data);
-            
-            setSelectedAppointmentId(appointmentId);
-            setShowVideoConsultation(true);
-        } catch (error) {
-            console.error('Error starting video consultation:', error);
-            // Show error to user
-            setError(error instanceof Error ? error.message : 'Failed to start video consultation');
-        }
-    };
-
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
@@ -169,178 +126,150 @@ export default function PatientAppointmentList() {
                     </div>
                 </div>
 
-                {showVideoConsultation ? (
-                    <div className="fixed inset-0 z-50 bg-black">
-                        <div className="absolute top-4 right-4">
+                <div className="bg-white rounded-xl shadow p-6">
+                    {/* Filters Row */}
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                        <div className="flex-1">
+                            <input
+                                type="text"
+                                placeholder="Search appointments..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
+                            />
+                        </div>
+                        <div className="flex gap-2 items-center">
+                            <div className="flex border border-gray-200 rounded-md overflow-hidden">
+                                <button
+                                    onClick={() => setActiveTab('upcoming')}
+                                    className={`px-4 py-2 text-md font-medium ${
+                                        activeTab === 'upcoming'
+                                            ? 'bg-pink-500 text-white'
+                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Upcoming
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('completed')}
+                                    className={`px-4 py-2 text-md font-medium ${
+                                        activeTab === 'completed'
+                                            ? 'bg-pink-500 text-white'
+                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                    }`}
+                                >
+                                    Completed
+                                </button>
+                            </div>
+                            <input
+                                type="date"
+                                value={dateFilter}
+                                onChange={(e) => setDateFilter(e.target.value)}
+                                className="px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Error message above table */}
+                    {error && (
+                        <div className="mb-4 text-center text-red-500 font-semibold">
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Table */}
+                    <div className="overflow-x-auto rounded-lg border border-gray-100">
+                        <table className="min-w-full bg-white">
+                            <thead>
+                                <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                    <th className="px-6 py-3 text-left font-medium">Doctor Name</th>
+                                    <th className="px-6 py-3 text-left font-medium">Appointment Date/Time</th>
+                                    <th className="px-6 py-3 text-left font-medium">Status</th>
+                                    <th className="px-6 py-3 text-center font-medium">Info</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={4} className="text-center py-8 text-gray-400">
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                ) : paginatedAppointments.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="text-center py-8 text-gray-400">
+                                            No appointments found
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    paginatedAppointments.map((appointment) => (
+                                        <tr key={appointment._id} className="border-t border-gray-100">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center">
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">
+                                                            {appointment.doctorId?.firstName} {appointment.doctorId?.lastName}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-900">
+                                                    {new Date(appointment.createdAt).toLocaleString()}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(appointment.status)}`}>
+                                                    {appointment.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex justify-center space-x-2">
+                                                    <button
+                                                        className="text-gray-400 hover:text-gray-500"
+                                                        title="View Details"
+                                                    >
+                                                        <FaInfoCircle className="text-xl" />
+                                                    </button>
+                                                   
+                                                        <JoinVideoButton
+                                                            appointmentId={appointment._id}
+                                                            token={localStorage.getItem('authToken') || ''}
+                                                            className="text-[#9904A1] hover:text-[#9904A1]"
+                                                        />
+                                                
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center mt-4">
                             <button
-                                onClick={() => setShowVideoConsultation(false)}
-                                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                                onClick={() => setPage(page - 1)}
+                                disabled={page === 1}
+                                className="px-3 py-1 mx-1 rounded-md bg-gray-100 text-gray-600 disabled:opacity-50"
                             >
-                                Close Video
+                                Previous
+                            </button>
+                            <span className="px-3 py-1 mx-1">
+                                Page {page} of {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setPage(page + 1)}
+                                disabled={page === totalPages}
+                                className="px-3 py-1 mx-1 rounded-md bg-gray-100 text-gray-600 disabled:opacity-50"
+                            >
+                                Next
                             </button>
                         </div>
-                        <VideoConsultation appointmentId={selectedAppointmentId || undefined} />
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-xl shadow p-6">
-                        {/* Filters Row */}
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    placeholder="Search appointments..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
-                                />
-                            </div>
-                            <div className="flex gap-2 items-center">
-                                <div className="flex border border-gray-200 rounded-md overflow-hidden">
-                                    <button
-                                        onClick={() => setActiveTab('upcoming')}
-                                        className={`px-4 py-2 text-md font-medium ${
-                                            activeTab === 'upcoming'
-                                                ? 'bg-pink-500 text-white'
-                                                : 'bg-white text-[#9904A1] hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        Upcoming
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('completed')}
-                                        className={`px-4 py-2 text-md font-medium ${
-                                            activeTab === 'completed'
-                                                ? 'bg-pink-500 text-white'
-                                                : 'bg-white text-[#9904A1] hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        Completed
-                                    </button>
-                                </div>
-                                <input
-                                    type="date"
-                                    value={dateFilter}
-                                    onChange={(e) => setDateFilter(e.target.value)}
-                                    className="px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9904A1]"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Error message above table */}
-                        {error && (
-                            <div className="mb-4 text-center text-red-500 font-semibold">
-                                {error}
-                            </div>
-                        )}
-
-                        {/* Table */}
-                        <div className="overflow-x-auto rounded-lg border border-gray-100">
-                            <table className="min-w-full bg-white">
-                                <thead>
-                                    <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                        <th className="px-6 py-3 text-left font-medium">Doctor Name</th>
-                                        <th className="px-6 py-3 text-left font-medium">Appointment Date/Time</th>
-                                        <th className="px-6 py-3 text-left font-medium">Status</th>
-                                        <th className="px-6 py-3 text-center font-medium">Info</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {loading ? (
-                                        <tr>
-                                            <td colSpan={4} className="text-center py-8 text-gray-400">
-                                                Loading...
-                                            </td>
-                                        </tr>
-                                    ) : paginatedAppointments.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="text-center py-8 text-gray-400">
-                                                No appointments found.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedAppointments.map((appointment) => (
-                                            <tr key={appointment._id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                                    {appointment.doctorId ? 
-                                                        `${appointment.doctorId.firstName} ${appointment.doctorId.lastName}` : 
-                                                        'Not assigned yet'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                                    {new Date(appointment.createdAt).toLocaleString()}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span
-                                                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
-                                                            appointment.status
-                                                        )}`}
-                                                    >
-                                                        {appointment.status
-                                                            .split("-")
-                                                            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-                                                            .join(" ")}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <button
-                                                            onClick={() => router.push(`/appointments/${appointment._id}`)}
-                                                            className="text-[#9904A1] hover:text-[#9904A1]"
-                                                            title="View Details"
-                                                        >
-                                                            <MdInfoOutline className="text-[#9904A1] text-xl" />
-                                                        </button>
-                                                        {appointment.status === 'confirmed' && (
-                                                            <button
-                                                                onClick={() => handleStartVideoConsultation(appointment._id)}
-                                                                className="text-[#9904A1] hover:text-[#9904A1]"
-                                                                title="Start Video Consultation"
-                                                            >
-                                                                <FaVideo className="text-[#9904A1] text-xl" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Pagination */}
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 text-sm text-gray-500">
-                            <div className="mb-2 md:mb-0">
-                                Rows per page: {rowsPerPage}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                    disabled={page === 1}
-                                    className="px-2 py-1 rounded disabled:opacity-50"
-                                >
-                                    &lt;
-                                </button>
-                                <span>
-                                    {page} of {totalPages || 1}
-                                </span>
-                                <button
-                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                    disabled={page === totalPages || totalPages === 0}
-                                    className="px-2 py-1 rounded disabled:opacity-50"
-                                >
-                                    &gt;
-                                </button>
-                            </div>
-                            <div>
-                                {totalRows > 0 && (
-                                    <span>
-                                        {((page - 1) * rowsPerPage) + 1} - {Math.min(page * rowsPerPage, totalRows)} of {totalRows}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </main>
             <Footer />
         </div>
