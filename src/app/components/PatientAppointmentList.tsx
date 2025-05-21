@@ -16,6 +16,7 @@ interface Appointment {
     createdAt: string;
     email?: string;
     phone?: string;
+    paymentStatus?: string;
     doctorId?: {
         firstName: string;
         lastName: string;
@@ -62,6 +63,7 @@ export default function PatientAppointmentList() {
                 lastName: item.patientId?.lastName || '',
                 phone: item.patientId?.phone || '',
                 status: item.status,
+                paymentStatus: item.paymentStatus || 'pending',
                 createdAt: item.createdAt,
                 doctorId: item.doctorId,
             }));
@@ -111,6 +113,20 @@ export default function PatientAppointmentList() {
                 return 'bg-gray-100 text-gray-800';
             default:
                 return 'bg-red-100 text-red-600';
+        }
+    };
+
+    // Payment status badge color
+    const getPaymentStatusBadge = (status: string | undefined) => {
+        switch (status?.toLowerCase()) {
+            case 'paid':
+                return 'bg-green-100 text-green-600';
+            case 'pending':
+                return 'bg-orange-100 text-orange-600';
+            case 'failed':
+                return 'bg-red-100 text-red-600';
+            default:
+                return 'bg-gray-100 text-gray-600';
         }
     };
 
@@ -185,7 +201,8 @@ export default function PatientAppointmentList() {
                                     <th className="px-6 py-3 text-left font-medium">Doctor Name</th>
                                     <th className="px-6 py-3 text-left font-medium">Appointment Date/Time</th>
                                     <th className="px-6 py-3 text-left font-medium">Status</th>
-                                    <th className="px-6 py-3 text-center font-medium">Info</th>
+                                    <th className="px-6 py-3 text-left font-medium">Payment Status</th>
+                                    <th className="px-6 py-3 text-center font-medium">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -223,21 +240,28 @@ export default function PatientAppointmentList() {
                                                     {appointment.status}
                                                 </span>
                                             </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusBadge(appointment.paymentStatus)}`}>
+                                                    {appointment.paymentStatus || 'pending'}
+                                                </span>
+                                            </td>
                                             <td className="px-6 py-4 text-center">
                                                 <div className="flex justify-center space-x-2">
                                                     <button
                                                         className="text-gray-400 hover:text-gray-500"
                                                         title="View Details"
+                                                        onClick={() => router.push(`/appointments/${appointment._id}`)}
                                                     >
                                                         <FaInfoCircle className="text-xl" />
                                                     </button>
-                                                   
+                                                    {(appointment.status === 'in-progress' || appointment.status === 'confirmed') && (
                                                         <JoinVideoButton
                                                             appointmentId={appointment._id}
                                                             token={localStorage.getItem('authToken') || ''}
                                                             className="text-[#9904A1] hover:text-[#9904A1]"
+                                                            status={appointment.status}
                                                         />
-                                                
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
