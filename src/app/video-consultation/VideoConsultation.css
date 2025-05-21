@@ -66,7 +66,7 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(255, 0, 0, 0.8);
+  background-color: rgba(255, 0, 0, 0.637);
   color: white;
   padding: 10px 20px;
   border-radius: 5px;
@@ -95,4 +95,15 @@
   padding: 10px 20px;
   border-radius: 5px;
   z-index: 30;
+}
+.center-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100vh;
+  font-size: 18px;
+  color: white;
+  padding: 20px;
+  background-color: #000;
 }
