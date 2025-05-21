@@ -7,6 +7,10 @@ import Button3 from "./Button3";
 import Link from "next/link";
 import { useEffect, useState } from 'react';
 import { addDays } from "date-fns";
+import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { setAppointmentForm } from '@/redux/slices/appointmentFormSlice';
 
 
 
@@ -38,7 +42,7 @@ const sections = [
     },
     {
         title: "Skin Problems",
-        text: "Our doctors provide treatment for rashes, acne, and infections, helping you resolve skin issues while you’re away from home.",
+        text: "Our doctors provide treatment for rashes, acne, and infections, helping you resolve skin issues while you're away from home.",
         image: "/images/Skin-Problems.jpg",
         list: [
             "Cold sores",
@@ -117,7 +121,7 @@ const sections = [
     },
     {
         title: "Women's & Men's Health",
-        text: "Women’s and men’s health issues can arise unexpectedly while traveling. We provide quick treatment for common concerns. Stay well and enjoy your trip with peace of mind.",
+        text: "Women's and men's health issues can arise unexpectedly while traveling. We provide quick treatment for common concerns. Stay well and enjoy your trip with peace of mind.",
         image: "/images/Health.jpg",
         list: [
             "Birth Control / Contraception",
@@ -141,7 +145,7 @@ const sections = [
     },
     {
         title: "Children's Health",
-        text: "Get prompt care for children’s health issues while traveling, ensuring your little ones stay healthy and enjoy the journey.",
+        text: "Get prompt care for children's health issues while traveling, ensuring your little ones stay healthy and enjoy the journey.",
         image: "/images/Childrens-Health.jpg",
         list: [
             "Child with fever",
@@ -159,7 +163,7 @@ const sections = [
     },
     {
         title: "Prescription Renewals",
-        text: "Doctors can handle prescription renewals for travelers who run out of medications, forget to pack them, or lose them while away. Not suitable for controlled substances.",
+        text: "Doctors can handle prescription renewals for travelers who run out of medications, forget to pack them, or lose them while away. Not suitable for controlled substances.",
         image: "/images/Prescription-Renewals.jpg",
         list: [
             "Antibiotics (e.g. amoxicillin, azythromycin, ciprofloxacin)",
@@ -204,19 +208,24 @@ interface FormData {
     reason: string,
 }
 
-type RegistrationProps = {
+type CreateAppointmentProps = {
     onSubmit: (formData: any) => void;
 };
 
-export default function Registration({ onSubmit }: RegistrationProps) {
-    const [currentStep, setCurrentStep] = useState(1);
+export default function CreateAppointment({ onSubmit }: CreateAppointmentProps) {
+    const router = useRouter();
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
     const [selected, setSelected] = useState<string | null>(null);
     const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
     const [startDate, endDate] = dateRange;
 
     const [authToken, setAuthToken] = useState<string | null>(null);
+    const dispatch = useDispatch();
+    const formData = useSelector((state: RootState) => state.appointmentForm);
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        dispatch(setAppointmentForm({ [e.target.name]: e.target.value }));
+    };
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -225,24 +234,26 @@ export default function Registration({ onSubmit }: RegistrationProps) {
         }
     }, []);
 
+    const determineInitialStep = () => {
+        if (
+            formData.fname &&
+            formData.lname &&
+            formData.email &&
+            formData.age &&
+            formData.sex
+        ) {
+            return 3;
+        } else if (formData.city && formData.country && formData.serviceType) {
+            return 3;
+        } else if (formData.reason) {
+            return 2;
+        } else {
+            return 1;
+        }
+    };
+    const [currentStep, setCurrentStep] = useState(determineInitialStep());
 
 
-    const [formData, setFormData] = useState<FormData>({
-        age: 0,
-        isForSelf: true,
-        status: 'requested',
-        country: 'UK',
-        city: '',
-        serviceType: '',
-        fname: '',
-        lname: '',
-        sex: '',
-        pronouns: '',
-        email: '',
-        visitType: 'urgent-care',
-        appointmentMode: 'Video',
-        reason: ''
-    });
 
 
     const nextStep = () => {
@@ -257,19 +268,13 @@ export default function Registration({ onSubmit }: RegistrationProps) {
         if (currentStep > 1) setCurrentStep(prev => prev - 1);
     };
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    };
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         const stepErrors = validateStep();
         if (Object.keys(stepErrors).length !== 0) {
             return;
         }
         onSubmit(formData);
-
-        console.log(formData)
     };
 
     const validateStep = () => {
@@ -324,13 +329,16 @@ export default function Registration({ onSubmit }: RegistrationProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="container mx-auto relative h-full">
-                <Image
-                    src='/images/logo-white.svg'
-                    alt=''
-                    width={250}
-                    height={100}
-                    className="absolute top-0 left-0 w-50 2xl:w-70"
-                />
+                <Link href="/" className="flex justify-center">
+                    <Image
+                        src='/images/logo-white.svg'
+                        alt=''
+                        width={250}
+                        height={100}
+                        className="absolute top-0 left-0 w-50 2xl:w-70"
+                    />
+                </Link>
+
                 <div className="grid lg:grid-cols-2 gap-12 items-center h-full">
                     <div className="lg:mt-20 pt-30 md:py-30 text-center lg:text-start">
                         <h2 className="text-4xl md:text-6xl 2xl:text-7xl font-medium text-white mb-10 capitalize">24/7 Medics <br />Care anywhere, <br />anytime!</h2>
@@ -378,6 +386,12 @@ export default function Registration({ onSubmit }: RegistrationProps) {
                                                 details.
                                             </small>
                                         </div>
+                                        {!authToken && <div className="mb-8">
+                                            <div className="mt-3">
+                                                <p>Already have an account? <Link href={`/login?from=/create-appointment&step=${currentStep}`} className="underline">Log in</Link></p>
+                                            </div>
+                                        </div>
+                                        }
                                         {/* <div className="mb-8">
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">What brings you in?</label>
                                             <div className="flex flex-col gap-4">
@@ -410,7 +424,7 @@ export default function Registration({ onSubmit }: RegistrationProps) {
                                             </div>
                                             {!authToken && <div className="mb-8">
                                                 <div className="mt-3">
-                                                    <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
+                                                    <p>Already have an account? <Link href="/login?from=/create-appointment" className="underline">Log in</Link></p>
                                                 </div>
                                             </div>
                                             }
@@ -472,7 +486,7 @@ export default function Registration({ onSubmit }: RegistrationProps) {
 
                                         {!authToken && <div className="mb-8">
                                             <div className="mt-3">
-                                                <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
+                                                <p>Already have an account? <Link href={`/login?from=/create-appointment&step=${currentStep}`} className="underline">Log in</Link></p>
                                             </div>
                                         </div>
                                         }
@@ -557,14 +571,14 @@ export default function Registration({ onSubmit }: RegistrationProps) {
                                                     Female
                                                 </label>
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                                                    <input type="radio" name="pronouns" checked={formData.attention === "other"} onChange={handleChange} value="other" className="mr-2" />
+                                                    <input type="radio" name="pronouns" checked={formData.pronouns === "other"} onChange={handleChange} value="other" className="mr-2" />
                                                     Other
                                                 </label>
                                             </div>
                                         </div>
                                         {!authToken && <div className="mb-8">
                                             <div className="mt-3">
-                                                <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
+                                                <p>Already have an account? <Link href={`/login?from=/create-appointment&step=${currentStep}`} className="underline">Log in</Link></p>
                                             </div>
                                         </div>
                                         }
@@ -595,7 +609,7 @@ export default function Registration({ onSubmit }: RegistrationProps) {
                                                 <div className="mt-3">
                                                     <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">How do you wish to proceed?</label>
                                                     <p className="mb-3">By creating an account, you can manage your appointments and requests with your personal account, and it eliminates the need to re-enter your details in future requests.</p>
-                                                    <p>Already have an account? <Link href="/login" className="underline">Log in</Link></p>
+                                                    <p>Already have an account? <Link href="/login?from=/create-appointment" className="underline">Log in</Link></p>
 
                                                 </div>
                                             </div>
@@ -624,7 +638,7 @@ export default function Registration({ onSubmit }: RegistrationProps) {
                                         /></button>
                                 )}
 
-                                {currentStep === 3 && (
+                                {currentStep === 3 && authToken && (
                                     <button type="submit" onClick={handleSubmit} className="bg-primary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-secondary transition text-lg">
                                         Submit <Image
                                             src="/images/btn-arrow.svg"
@@ -633,6 +647,22 @@ export default function Registration({ onSubmit }: RegistrationProps) {
                                             height={13}
                                             className="ms-3"
                                         /></button>
+                                )}
+
+                                {currentStep === 3 && !authToken && (
+                                    <button
+                                        type="button"
+                                        onClick={() => router.push(`/signup?from=/create-appointment&step=${currentStep}`)}
+                                        className="bg-primary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-secondary transition text-lg"
+                                    >
+                                        Create Account <Image
+                                            src="/images/btn-arrow.svg"
+                                            alt="24/7 Medics"
+                                            width={12}
+                                            height={13}
+                                            className="ms-3"
+                                        />
+                                    </button>
                                 )}
                             </div>
                         </div>

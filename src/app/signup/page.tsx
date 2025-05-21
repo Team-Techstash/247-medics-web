@@ -10,11 +10,14 @@ import FAQWhatWeTreat from "../components/FAQWhatWeTreat";
 
 import MainLayout from "../layouts/MainLayout";
 import { authService } from "@/api/services/service";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { showToast } from '../../utils/toast';
+import Cookies from 'js-cookie';
+
 
 export default function SignUpPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [formData, setFormData] = useState({});
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,8 +30,12 @@ export default function SignUpPage() {
             const response = await authService.register(data);
             if (response && response.token) {
                 showToast.success('SignUp successful!');
+                Cookies.set('authToken', response.token, { expires: 7 }); 
                 localStorage.setItem("authToken", response.token);
-                router.push("/");
+                
+                // Get the redirect path from query params, default to home
+                const from = searchParams.get('from') || '/';
+                router.push(from);
             } else {
                 showToast.error(response.message || "SignUp failed");
             }

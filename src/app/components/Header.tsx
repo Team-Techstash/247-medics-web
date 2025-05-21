@@ -9,6 +9,9 @@ import Button2 from "./Button2";
 import { Menu, X, User, Search } from "lucide-react";
 import { showToast } from "@/utils/toast";
 import Cookies from 'js-cookie';
+import { resetAppointmentForm } from '@/redux/slices/appointmentFormSlice';
+import { useDispatch } from 'react-redux';
+
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -17,6 +20,7 @@ const Header = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -30,6 +34,7 @@ const Header = () => {
         Cookies.remove("authToken");
         setAuthToken(null);
         setShowDropdown(false);
+        dispatch(resetAppointmentForm());
         showToast.success("Logged out successfully");
         router.push("/");
     };

@@ -57,10 +57,10 @@ export const authService = {
         });
     },
 
-    resetPassword: async (token: any, password: string): Promise<any> => {
+    resetPassword: async (token: any, data: any): Promise<any> => {
         return apiCall(AUTH_ROUTES.RESET_PASSWORD(token), {
             method: 'POST',
-            body: JSON.stringify(password),
+            body: JSON.stringify(data),
         });
     },
 

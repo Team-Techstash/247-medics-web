@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Ubuntu } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
+import { ReduxProvider } from '../redux/reduxProvider';
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,38 +36,41 @@ export default function RootLayout({
       <body
         className={`${ubuntu.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster
-          toastOptions={{
-            success: {
-              iconTheme: {
-                primary: '#9904A1',
-                secondary: '#E0F2FE',
+        <ReduxProvider>
+          <Toaster
+            toastOptions={{
+              success: {
+                iconTheme: {
+                  primary: '#9904A1',
+                  secondary: '#E0F2FE',
+                },
+                style: {
+                  border: '1px solid primary',
+                  padding: '12px 16px',
+                  color: '#1E3A8A',
+                },
               },
-              style: {
-                border: '1px solid primary',
-                padding: '12px 16px',
-                color: '#1E3A8A',
+              error: {
+                style: {
+                  border: '1px solid #EF4444',
+                  padding: '12px 16px',
+                  color: '#991B1B',
+                },
               },
-            },
-            error: {
-              style: {
-                border: '1px solid #EF4444',
-                padding: '12px 16px',
-                color: '#991B1B',
+              loading: {
+                style: {
+                  border: '1px solid #FBBF24',
+                  padding: '12px 16px',
+                  color: '#92400E',
+                },
               },
-            },
-            loading: {
-              style: {
-                border: '1px solid #FBBF24',
-                padding: '12px 16px',
-                color: '#92400E',
-              },
-            },
-          }}
-          position="top-right"
-        />
-        {children}
+            }}
+            position="top-right"
+          />
+          {children}
+        </ReduxProvider>
+
       </body>
-    </html>
+    </html >
   );
 }
