@@ -2,10 +2,8 @@ import React from 'react';
 import VideoConsultation from '@/app/video-consultation/VideoConsultation';
 
 interface PageProps {
-  params: {
-    appointmentId: string;
-    token: string;
-  };
+  // ANY-PROPS-NOTE
+  params: any;
 }
 
 const VideoConsultationPage: React.FC<PageProps> = ({ params }) => {

@@ -76,8 +76,14 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
             },
           }
         );
+        const errorData = await response.json();
 
-        if (!response.ok) throw new Error("Failed to fetch Agora credentials");
+        if (!response.ok && errorData.message) {
+          throw new Error(errorData.message);
+        }
+        if (!response.ok) {
+          throw new Error("Failed to fetch Agora credentials");
+        }
 
         const data = await response.json();
         if (!data.agoraCredentials) throw new Error("Invalid response format");
@@ -199,9 +205,7 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
   }
 
   if (error) {
-    return (
-      <div className="error-message">{error}</div>
-    );
+    return <div className="error-message">{error}</div>;
   }
 
   return (

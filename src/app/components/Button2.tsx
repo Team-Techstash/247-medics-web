@@ -4,7 +4,7 @@ import Image from "next/image";
 interface CTAProps {
     text: string;
     href: string;
-    style: string;
+    style?: string;
 }
 
 export default function Button2({ text, href, style }: CTAProps) {
