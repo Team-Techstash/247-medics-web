@@ -46,7 +46,7 @@ export default function ForgotPassword({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: Event) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     if (Object.keys(errors).length !== 0) {
@@ -92,7 +92,7 @@ export default function ForgotPassword({
             <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
               <form
                 className="space-y-6"
-                onSubmit={(e: any) => handleSubmit(e)}
+                onSubmit={handleSubmit}
               >
                 <div>
                   <label

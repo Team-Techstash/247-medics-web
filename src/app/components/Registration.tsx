@@ -272,7 +272,7 @@ export default function CreateAppointment({
     if (currentStep > 1) setCurrentStep((prev) => prev - 1);
   };
 
-  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const stepErrors = validateStep();
     if (Object.keys(stepErrors).length !== 0) {
@@ -365,9 +365,7 @@ export default function CreateAppointment({
               <p className="mt-3 text-primary mb-10">Enter the detail below</p>
 
               <form
-                onSubmit={(e: any) => {
-                  handleSubmit(e);
-                }}
+                onSubmit={handleSubmit}
               >
                 {currentStep === 1 && (
                   <div className="">
