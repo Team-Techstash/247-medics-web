@@ -115,15 +115,17 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
 
     const startCall = async () => {
       try {
-        clientRef.current = agoraRTC.createClient({
+        const client = agoraRTC.createClient({
           mode: "rtc",
           codec: "vp8",
         });
+        clientRef.current = client;
 
-        clientRef.current.on(
+        client.on(
           "user-published",
-          async (user: IAgoraRTCRemoteUser, mediaType) => {
-            await clientRef.current?.subscribe(user, mediaType);
+          async (user: IAgoraRTCRemoteUser, mediaType: "audio" | "video") => {
+            if (!clientRef.current) return;
+            await clientRef.current.subscribe(user, mediaType);
             if (mediaType === "video" && remotePlayerRef.current) {
               user.videoTrack?.play(remotePlayerRef.current);
             }
@@ -133,11 +135,11 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
           }
         );
 
-        clientRef.current.on("user-unpublished", (user) => {
+        client.on("user-unpublished", (user: IAgoraRTCRemoteUser) => {
           console.log("Remote user unpublished:", user.uid);
         });
 
-        await clientRef.current.join(
+        await client.join(
           agoraCredentials.appId,
           agoraCredentials.channel,
           agoraCredentials.token,
@@ -150,6 +152,10 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
         ]);
 
         localTracksRef.current = [audioTrack, videoTrack];
+
+        if (!clientRef.current) {
+          throw new Error("Client not initialized");
+        }
 
         await clientRef.current.publish([audioTrack, videoTrack]);
 
