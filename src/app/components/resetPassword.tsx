@@ -15,6 +15,8 @@ export default function ResetPassword({ onSubmit, isLoading }: ResetPasswordProp
     const router = useRouter();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
 
 
@@ -25,6 +27,8 @@ export default function ResetPassword({ onSubmit, isLoading }: ResetPasswordProp
 
         if (!password) {
             newErrors.password = "Password is required";
+        } else if (password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters long";
         }
 
         if (!confirmPassword) {
@@ -87,16 +91,24 @@ export default function ResetPassword({ onSubmit, isLoading }: ResetPasswordProp
                                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                         Password
                                     </label>
-                                    <div className="mt-1">
+                                    <div className="relative mt-1">
                                         <input
                                             id="password"
                                             name="password"
-                                            type="password"
+                                            type={showPassword ? "text" : "password"}
                                             autoComplete="password"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? "Hide" : "Show"}
+                                        </button>
                                     </div>
                                     {errors.password && <p className="text-red-600 !text-xs mt-1">{errors.password}</p>}
                                 </div>
@@ -105,16 +117,24 @@ export default function ResetPassword({ onSubmit, isLoading }: ResetPasswordProp
                                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                         Confirm Password
                                     </label>
-                                    <div className="mt-1">
+                                    <div className="relative mt-1">
                                         <input
                                             id="password"
                                             name="password"
-                                            type="password"
+                                            type={showConfirmPassword ? "text" : "password"}
                                             autoComplete="password"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
+                                         <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? "Hide" : "Show"}
+                                        </button>
                                     </div>
                                     {errors.confirmPassword && <p className="text-red-600 !text-xs mt-1">{errors.confirmPassword}</p>}
                                 </div>

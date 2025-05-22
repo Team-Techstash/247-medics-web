@@ -102,7 +102,7 @@ export default function PaymentForm({ appointmentId, amount, selectedResponse, o
                 <label htmlFor="card-element" className="block text-sm font-medium text-gray-700">
                     Card Details
                 </label>
-                <div className="mt-1 p-3 border border-gray-300 rounded-md shadow-sm">
+                <div className="mt-1 p-3 border border-gray-300 rounded-md shadow-sm hover:border-primary">
                     <CardElement
                         id="card-element"
                         options={{

@@ -15,9 +15,13 @@ type SignUp = {
 };
 export default function SignUp({ onSubmit, isLoading }: SignUp) {
     const router = useRouter();
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formData, setFormData] = useState<RegisterFormData>({
         firstName: "",
         lastName: "",
+        pronouns: "",
         email: "",
         phone: "",
         password: "",
@@ -28,33 +32,18 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name.startsWith("address.")) {
-            const key = name.split(".")[1];
-            setFormData((prev) => ({
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+        if (errors[name as keyof RegisterFormErrors]) {
+            setErrors((prev) => ({
                 ...prev,
-                address: {
-                    ...prev.address,
-                    [key]: value,
-                },
+                [name]: undefined,
             }));
-            if (errors.address?.[key as keyof Address]) {
-                setErrors((prev) => ({
-                    ...prev,
-                    address: { ...prev.address, [key]: undefined },
-                }));
-            }
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
-            if (errors[name as keyof RegisterFormErrors]) {
-                setErrors((prev) => ({
-                    ...prev,
-                    [name]: undefined,
-                }));
-            }
         }
+
     };
 
     const validate = () => {
@@ -86,6 +75,11 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
         } else if (formData.password.length < 6) {
             newErrors.password = "Password must be at least 6 characters long";
             isValid = false;
+        }
+         if (!confirmPassword) {
+            newErrors.confirmPassword = "Confirm Password is required";
+        } else if (formData.password && confirmPassword !== formData.password) {
+            newErrors.confirmPassword = "Passwords do not match";
         }
 
         setErrors(newErrors);
@@ -187,6 +181,23 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
 
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                        Pronouns
+                                    </label>
+                                    <div className="mt-1">
+                                        <input
+                                            id="pronouns"
+                                            name="pronouns"
+                                            type="pronouns"
+                                            autoComplete="pronouns"
+                                            value={formData.pronouns}
+                                            onChange={handleChange}
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                         Email address
                                     </label>
                                     <div className="mt-1">
@@ -224,35 +235,68 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                         Password
                                     </label>
-                                    <div className="mt-1">
+                                    <div className="relative mt-1">
                                         <input
                                             id="password"
                                             name="password"
-                                            type="password"
+                                            type={showPassword ? "text" : "password"}
                                             value={formData.password}
                                             onChange={handleChange}
                                             className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
                                         />
+                                         <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? "Hide" : "Show"}
+                                        </button>
                                     </div>
                                     {errors.password && <div className="text-red-600 text-xs mt-1">{errors.password}</div>}
                                 </div>
 
+                                 <div>
+                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                        Confirm Password
+                                    </label>
+                                    <div className="relative mt-1">
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            autoComplete="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? "Hide" : "Show"}
+                                        </button>
+                                    </div>
+                                    {errors.confirmPassword && <p className="text-red-600 !text-xs mt-1">{errors.confirmPassword}</p>}
+                                </div>
 
 
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isLoading ? "Creating account..." : "Create account"}
-                            </button>
+                                <div>
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoading ? "Creating account..." : "Create account"}
+                                    </button>
+                                </div>
+
+                            </form>
                         </div>
 
-                    </form>
-            </div>
-
-        </div>
+                    </div>
                 </motion.div >
             </div >
         </section >

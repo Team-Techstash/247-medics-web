@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Find from '../components/find.tsx'
 
-export default function SignUpPage() {
+export default function FindPage() {
      return (
             <>
             <Find/>

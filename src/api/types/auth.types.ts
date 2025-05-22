@@ -3,6 +3,7 @@
 export interface RegisterFormData {
     firstName: string;
     lastName: string;
+    pronouns: string;
     email: string;
     phone: string;
     password: string;
@@ -16,8 +17,7 @@ export interface RegisterFormErrors {
     email?: string;
     phone?: string;
     password?: string;
-    gender: string,
-    age: string,
+    confirmPassword?:string;
 }
 
 // Login form data

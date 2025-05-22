@@ -198,9 +198,9 @@ interface FormData {
     country: string,
     city: string,
     serviceType: string,
-    fname: string,
-    lname: string,
-    sex: string,
+    firstName: string,
+    lastName: string,
+    gender: string,
     pronouns: string,
     email: string,
     visitType: string,
@@ -236,11 +236,11 @@ export default function CreateAppointment({ onSubmit }: CreateAppointmentProps) 
 
     const determineInitialStep = () => {
         if (
-            formData.fname &&
-            formData.lname &&
+            formData.firstName &&
+            formData.lastName &&
             formData.email &&
             formData.age &&
-            formData.sex
+            formData.gender
         ) {
             return 3;
         } else if (formData.city && formData.country && formData.serviceType) {
@@ -294,8 +294,8 @@ export default function CreateAppointment({ onSubmit }: CreateAppointmentProps) 
         }
 
         if (currentStep === 3) {
-            if (!formData.fname) stepErrors.fname = "First name is required.";
-            if (!formData.lname) stepErrors.lname = "Last name is required.";
+            if (!formData.firstName) stepErrors.firstName = "First name is required.";
+            if (!formData.lastName) stepErrors.lastName = "Last name is required.";
             if (!formData.email) {
                 stepErrors.email = "Email is required.";
             } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
@@ -304,7 +304,7 @@ export default function CreateAppointment({ onSubmit }: CreateAppointmentProps) 
             if (formData.age === undefined || formData.age === null || formData.age === 0) {
                 stepErrors.age = "Age is required.";
             }
-            if (!formData.sex) stepErrors.sex = "Please select your sex.";
+            if (!formData.gender) stepErrors.gender = "Please select your sex.";
         }
 
         setErrors({ ...stepErrors });
@@ -499,17 +499,17 @@ export default function CreateAppointment({ onSubmit }: CreateAppointmentProps) 
                                                 <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Your name</label>
                                                 <div className="grid lg:grid-cols-2 gap-4">
                                                     <div>
-                                                        <input type="text" name="fname" value={formData.fname}
+                                                        <input type="text" name="firstName" value={formData.firstName}
                                                             onChange={handleChange} placeholder="First Name" className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg" />
-                                                        {errors.fname && (
-                                                            <p className="text-red-500 !text-sm mt-2">{errors.fname}</p>
+                                                        {errors.firstName && (
+                                                            <p className="text-red-500 !text-sm mt-2">{errors.firstName}</p>
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <input type="text" name="lname" value={formData.lname}
+                                                        <input type="text" name="lastName" value={formData.lastName}
                                                             onChange={handleChange} placeholder="Last Name" className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg" />
-                                                        {errors.lname && (
-                                                            <p className="text-red-500 !text-sm mt-2">{errors.lname}</p>
+                                                        {errors.lastName && (
+                                                            <p className="text-red-500 !text-sm mt-2">{errors.lastName}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -547,16 +547,16 @@ export default function CreateAppointment({ onSubmit }: CreateAppointmentProps) 
                                             <label htmlFor="" className="block mb-3 font-semibold text-sm 2xl:text-lg">Sex</label>
                                             <div className="grid lg:grid-cols-2 gap-4">
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                                                    <input type="radio" name="sex" checked={formData.sex === "male"} onChange={handleChange} value="male" className="mr-2" />
+                                                    <input type="radio" name="gender" checked={formData.gender === "male"} onChange={handleChange} value="male" className="mr-2" />
                                                     Male
                                                 </label>
                                                 <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                                                    <input type="radio" name="sex" checked={formData.sex === "female"} onChange={handleChange} value="female" className="mr-2" />
+                                                    <input type="radio" name="gender" checked={formData.gender === "female"} onChange={handleChange} value="female" className="mr-2" />
                                                     Female
                                                 </label>
                                             </div>
-                                            {errors.sex && (
-                                                <p className="text-red-500 !text-sm mt-2">{errors.sex}</p>
+                                            {errors.gender && (
+                                                <p className="text-red-500 !text-sm mt-2">{errors.gender}</p>
                                             )}
                                         </div>
                                         <div className="mb-8">

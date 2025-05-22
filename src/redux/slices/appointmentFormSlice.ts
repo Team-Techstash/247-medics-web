@@ -7,10 +7,10 @@ interface AppointmentFormData {
   country: string;
   city: string;
   serviceType: string;
-  fname: string;
-  lname: string;
-  sex: string;
+  firstName: string;
+  lastName: string;
   pronouns: string;
+  gender:string,
   email: string;
   visitType: string;
   appointmentMode: string;
@@ -24,10 +24,10 @@ const initialState: AppointmentFormData = {
   country: 'UK',
   city: '',
   serviceType: '',
-  fname: '',
-  lname: '',
-  sex: '',
+  firstName: '',
+  lastName: '',
   pronouns: '',
+  gender: '',
   email: '',
   visitType: 'urgent-care',
   appointmentMode: 'Video',

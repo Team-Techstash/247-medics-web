@@ -35,28 +35,27 @@ export default function PaymentPage() {
             <Header />
             <Elements stripe={stripePromise}>
                 <div className="flex-grow bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 mt-20">
-                    <div className="max-w-md mx-auto">
+                    <div className="max-w-md mx-auto border border-gray-200 rounded bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                         <div className="text-center">
-                            <h2 className="text-3xl font-extrabold text-gray-900">
+                            <h2 className="text-xl font-extrabold text-gray-900">
                                 Complete Your Payment
                             </h2>
-                            <div className="mt-4 text-gray-600">
-                                <p>Doctor:  <strong className='text-primary'> {selectedResponse.doctorId.firstName} {selectedResponse.doctorId.lastName}</strong></p>
-                                <p>
-                                    Appointment Time:
-                                    <strong className="text-primary">
-                                        {new Date(selectedResponse.appointmentTime).toLocaleString('en-US', {
+                            <div className="mt-4 text-gray-500">
+                                <p className='!text-[16px]'>Doctor: <strong className='text-primary'> {selectedResponse.doctorId.firstName} {selectedResponse.doctorId.lastName}</strong></p>
+                                <p className='!text-[16px]'>
+                                    Appointment Time: <strong className="text-primary">
+                                        {new Date(selectedResponse.dateTime).toLocaleString('en-US', {
                                             dateStyle: 'medium',
                                             timeStyle: 'short',
                                         })}
                                     </strong>
                                 </p>
 
-                                <p>Amount: <strong className='text-primary'>${parseFloat(selectedResponse.price).toFixed(2)}</strong></p>
+                                <p className='!text-[16px]'>Appointment Charges: <strong className='text-primary'>${parseFloat(selectedResponse.price).toFixed(2)}</strong></p>
                             </div>
                         </div>
 
-                        <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                        <div className="mt-8">
                             <PaymentForm
                                 appointmentId={appointmentId}
                                 selectedResponse={selectedResponse}
