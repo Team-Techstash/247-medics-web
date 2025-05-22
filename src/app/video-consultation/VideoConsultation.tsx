@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import AgoraRTC, {
+import "./VideoConsultation.css";
+
+// Import types only
+import type {
   IAgoraRTCClient,
   ILocalAudioTrack,
   ILocalVideoTrack,
   IAgoraRTCRemoteUser,
 } from "agora-rtc-sdk-ng";
-import "./VideoConsultation.css";
 
 interface AgoraCredentials {
   appId: string;
@@ -25,23 +27,35 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
   appointmentId,
   token,
 }) => {
-  const [permissionsGranted, setPermissionsGranted] = useState<boolean | null>(
-    null
-  );
-  const [agoraCredentials, setAgoraCredentials] =
-    useState<AgoraCredentials | null>(null);
+  const [permissionsGranted, setPermissionsGranted] = useState<boolean | null>(null);
+  const [agoraCredentials, setAgoraCredentials] = useState<AgoraCredentials | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [agoraRTC, setAgoraRTC] = useState<any>(null);
 
   const localPlayerRef = useRef<HTMLDivElement>(null);
   const remotePlayerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<IAgoraRTCClient | null>(null);
-  const localTracksRef = useRef<[ILocalAudioTrack, ILocalVideoTrack] | null>(
-    null
-  );
+  const localTracksRef = useRef<[ILocalAudioTrack, ILocalVideoTrack] | null>(null);
+
+  // Initialize AgoraRTC on client side only
+  useEffect(() => {
+    const initAgora = async () => {
+      try {
+        const AgoraRTC = (await import('agora-rtc-sdk-ng')).default;
+        setAgoraRTC(AgoraRTC);
+      } catch (err) {
+        console.error('Failed to load AgoraRTC:', err);
+        setError('Failed to initialize video call system');
+      }
+    };
+    initAgora();
+  }, []);
 
   // Step 1: Check for permissions
   useEffect(() => {
+    if (!agoraRTC) return;
+
     const checkPermissions = async () => {
       try {
         await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -50,18 +64,16 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
         console.warn("Permissions denied or not available:", err);
         setPermissionsGranted(false);
         setIsLoading(false);
-        setError(
-          "Please allow camera and microphone permissions to join the video call."
-        );
+        setError("Please allow camera and microphone permissions to join the video call.");
       }
     };
 
     checkPermissions();
-  }, []);
+  }, [agoraRTC]);
 
   // Step 2: Fetch credentials only if permissions are granted
   useEffect(() => {
-    if (!permissionsGranted) return;
+    if (!permissionsGranted || !agoraRTC) return;
 
     const fetchCredentials = async () => {
       try {
@@ -76,38 +88,34 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
             },
           }
         );
-        const errorData = await response.json();
-
-        if (!response.ok && errorData.message) {
-          throw new Error(errorData.message);
-        }
-        if (!response.ok) {
-          throw new Error("Failed to fetch Agora credentials");
-        }
-
         const data = await response.json();
-        if (!data.agoraCredentials) throw new Error("Invalid response format");
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch Agora credentials");
+        }
+
+        if (!data.agoraCredentials) {
+          throw new Error("Invalid response format");
+        }
 
         setAgoraCredentials(data.agoraCredentials);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch credentials"
-        );
+        setError(err instanceof Error ? err.message : "Failed to fetch credentials");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCredentials();
-  }, [permissionsGranted, appointmentId, token]);
+  }, [permissionsGranted, appointmentId, token, agoraRTC]);
 
   // Step 3: Start Agora client only if credentials exist
   useEffect(() => {
-    if (!agoraCredentials) return;
+    if (!agoraCredentials || !agoraRTC) return;
 
     const startCall = async () => {
       try {
-        clientRef.current = AgoraRTC.createClient({
+        clientRef.current = agoraRTC.createClient({
           mode: "rtc",
           codec: "vp8",
         });
@@ -137,8 +145,8 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
         );
 
         const [audioTrack, videoTrack] = await Promise.all([
-          AgoraRTC.createMicrophoneAudioTrack(),
-          AgoraRTC.createCameraVideoTrack(),
+          agoraRTC.createMicrophoneAudioTrack(),
+          agoraRTC.createCameraVideoTrack(),
         ]);
 
         localTracksRef.current = [audioTrack, videoTrack];
@@ -172,7 +180,7 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
       };
       cleanup();
     };
-  }, [agoraCredentials]);
+  }, [agoraCredentials, agoraRTC]);
 
   const handleMute = () => {
     const audioTrack = localTracksRef.current?.[0];
