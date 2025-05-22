@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import "./VideoConsultation.css";
+import { API_CONFIG } from '@/config/api';
 
 // Import types only
 import type {
@@ -79,7 +80,7 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
       try {
         setIsLoading(true);
         const response = await fetch(
-          `http://3.14.150.170:5000/api/appointments/join/${appointmentId}`,
+          `${API_CONFIG.BASE_URL}/appointments/join/${appointmentId}`,
           {
             method: "POST",
             headers: {

@@ -1,4 +1,5 @@
 import { AUTH_ROUTES, APPOINTMENTS_ROUTES } from '../routes/api';
+import { API_CONFIG } from '@/config/api';
 import {
     LoginRequest,
     ApiResponse,
@@ -7,8 +8,7 @@ import {
 } from '../types/auth.types';
 
 // Base API URL
-// const API_BASE_URL = 'http://localhost:5000/api';
-const API_BASE_URL = 'http://3.14.150.170:5000/api';
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
