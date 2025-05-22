@@ -17,6 +17,7 @@ interface Appointment {
     email?: string;
     phone?: string;
     paymentStatus?: string;
+    scheduledAt?: string;
     doctorId?: {
         firstName: string;
         lastName: string;
@@ -65,6 +66,7 @@ export default function PatientAppointmentList() {
                 status: item.status,
                 paymentStatus: item.paymentStatus || 'pending',
                 createdAt: item.createdAt,
+                scheduledAt: item.scheduledAt,
                 doctorId: item.doctorId,
             }));
             console.log('Mapped appointments:', mapped);
@@ -83,10 +85,10 @@ export default function PatientAppointmentList() {
         const matchesSearch =
             appointment.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             appointment.phone?.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
         const isCompleted = appointment.status === 'completed';
         const matchesTab = activeTab === 'completed' ? isCompleted : !isCompleted;
-        
+
         return matchesSearch && matchesTab;
     });
 
@@ -158,21 +160,19 @@ export default function PatientAppointmentList() {
                             <div className="flex border border-gray-200 rounded-md overflow-hidden">
                                 <button
                                     onClick={() => setActiveTab('upcoming')}
-                                    className={`px-4 py-2 text-md font-medium ${
-                                        activeTab === 'upcoming'
-                                            ? 'bg-pink-500 text-white'
-                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
-                                    }`}
+                                    className={`px-4 py-2 text-md font-medium ${activeTab === 'upcoming'
+                                        ? 'bg-pink-500 text-white'
+                                        : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                        }`}
                                 >
                                     Upcoming
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('completed')}
-                                    className={`px-4 py-2 text-md font-medium ${
-                                        activeTab === 'completed'
-                                            ? 'bg-pink-500 text-white'
-                                            : 'bg-white text-[#9904A1] hover:bg-gray-50'
-                                    }`}
+                                    className={`px-4 py-2 text-md font-medium ${activeTab === 'completed'
+                                        ? 'bg-pink-500 text-white'
+                                        : 'bg-white text-[#9904A1] hover:bg-gray-50'
+                                        }`}
                                 >
                                     Completed
                                 </button>
@@ -232,7 +232,10 @@ export default function PatientAppointmentList() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm text-gray-900">
-                                                    {new Date(appointment.createdAt).toLocaleString()}
+                                                    {appointment.scheduledAt
+                                                        ? new Date(appointment.scheduledAt).toLocaleString()
+                                                        : "N/A"}
+
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -261,6 +264,12 @@ export default function PatientAppointmentList() {
                                                             className="text-[#9904A1] hover:text-[#9904A1]"
                                                             status={appointment.status}
                                                         />
+                                                    )}
+                                                    {(appointment.status === 'requested' || appointment.status === 'pending') && (
+                                                        <button onClick={() => router.push(`/find?id=${appointment._id}`) }
+                                                            className="text-pink-500 hover:text-[#9904A1] px-3 py-1.5 border border-pink-500 rounded-full hover:bg-[#4A154D] hover:border-[#4A154D] hover:text-white transition-colors text-sm">
+                                                            View Doctors Response
+                                                        </button>
                                                     )}
                                                 </div>
                                             </td>
@@ -294,8 +303,8 @@ export default function PatientAppointmentList() {
                         </div>
                     )}
                 </div>
-            </main>
+            </main >
             <Footer />
-        </div>
+        </div >
     );
 }
