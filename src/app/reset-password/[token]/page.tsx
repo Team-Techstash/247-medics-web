@@ -7,7 +7,10 @@ import { showToast } from "@/utils/toast";
 
 interface PageProps {
   // ANY-PROPS-NOTE
-  params: any;
+  // params: any;
+  params: {
+    token: string;
+  };
 }
 
 const VideoConsultationPage: React.FC<PageProps> = ({ params }) => {

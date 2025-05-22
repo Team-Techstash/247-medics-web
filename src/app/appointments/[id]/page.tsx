@@ -7,14 +7,19 @@ import Footer from "@/app/components/Footer";
 import { useRouter } from "next/navigation";
 import { NextPage } from "next";
 
-interface AppointmentDetailPageProps {
-  // ANY-PROPS-NOTE
-  params: any;
-}
+// interface AppointmentDetailPageProps {
+//   // ANY-PROPS-NOTE
+//   // params: any;
+//    params: {
+//     id: string;
+//   };
+// }
 
-const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
-  params,
-}) => {
+// const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
+//   params,
+// }) => {
+const AppointmentDetailPage = ({ params }: { params: { id: string } }) => {
+
   const router = useRouter();
   const [appointment, setAppointment] = useState<any>(null);
   const [error, setError] = useState("");
