@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation';
 interface JoinVideoButtonProps {
   appointmentId: string;
   token: string;
+  status: string;
   className?: string;
 }
 
 const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({ 
   appointmentId, 
   token,
+  status,
   className = ''
 }) => {
   const router = useRouter();
@@ -23,7 +25,7 @@ const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({
   return (
     <button
       onClick={handleJoinVideo}
-      className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors ${className}`}
+      className={`px-3 py-1.5 bg-pink-500 text-white rounded-full hover:bg-[#4A154D] hover:text-white transition-colors text-sm ${className}`}
     >
       Join Video Consultation
     </button>
