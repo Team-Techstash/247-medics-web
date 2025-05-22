@@ -32,8 +32,8 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
   const [errors, setErrors] = useState<RegisterFormErrors>({});
   const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
 
     setFormData((prev) => ({
       ...prev,
@@ -87,14 +87,15 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
     return isValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    if (Object.keys(errors).length !== 0) {
-      return;
-    }
-    onSubmit(formData);
-  };
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!validate()) return;
+        if (Object.keys(errors).length !== 0) {
+            return;
+        }
+        onSubmit(formData);
+    };
+
 
   return (
     <section className="relative py-10 px-6 2xl:py-18 -mt-18 lg:h-full flex items-center">

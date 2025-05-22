@@ -25,11 +25,10 @@ export default function ResetPassword({
     confirmPassword?: string;
   }>({});
 
-  const validate = () => {
-    const newErrors: {
-      confirmPassword?: string;
-      password?: string;
-    } = {};
+    const validate = () => {
+        const newErrors: {
+            confirmPassword?: string; password?: string
+        } = {};
 
     if (!password) {
       newErrors.password = "Password is required";
@@ -47,14 +46,16 @@ export default function ResetPassword({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    if (Object.keys(errors).length !== 0) {
-      return;
-    }
-    onSubmit(password);
-  };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!validate()) return;
+        if (Object.keys(errors).length !== 0) {
+            return;
+        }
+        onSubmit(password);
+    };
+
 
   return (
     <section className="relative py-10 px-6 2xl:py-18 -mt-18 lg:h-screen flex items-center">

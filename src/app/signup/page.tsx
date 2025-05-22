@@ -30,8 +30,8 @@ export default function SignUpPage() {
             const response = await authService.register(data);
             if (response && response.token) {
                 showToast.success('SignUp successful!');
-                Cookies.set('authToken', response.token, { expires: 7 }); 
-                localStorage.setItem("authToken", response.token);
+                Cookies.set('authToken', (response.token as unknown) as string, { expires: 7 }); 
+                localStorage.setItem("authToken", (response.token as unknown) as string);
                 
                 // Get the redirect path from query params, default to home
                 const from = searchParams.get('from') || '/';
