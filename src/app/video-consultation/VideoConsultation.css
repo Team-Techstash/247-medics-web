@@ -4,6 +4,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #000;
 }
 
 .video-grid {
@@ -25,9 +26,10 @@
   width: 200px;
   height: 150px;
   z-index: 10;
-  border: 2px solid white;
-  border-radius: 8px;
+  border: 2px solid #9904A1;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .remote-video {
@@ -49,16 +51,39 @@
 }
 
 .consultation-controls button {
-  padding: 10px 20px;
-  background-color: #4a76a8;
+  padding: 12px 24px;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 16px;
 }
 
-.consultation-controls button:hover {
-  background-color: #3a5f8a;
+.consultation-controls button:first-child {
+  background-color: #9904A1;
+}
+
+.consultation-controls button:first-child:hover {
+  background-color: #7a0380;
+}
+
+.consultation-controls button:last-child {
+  background-color: #ED34A3;
+}
+
+.consultation-controls button:last-child:hover {
+  background-color: #d12d92;
+}
+
+.consultation-controls button.muted {
+  background-color: #666 !important;
+  position: relative;
+}
+
+.consultation-controls button.muted:hover {
+  background-color: #555 !important;
 }
 
 .error-message {
@@ -66,23 +91,30 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(255, 0, 0, 0.637);
+  background-color: rgba(255, 0, 0, 0.8);
   color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: 12px 24px;
+  border-radius: 8px;
   z-index: 30;
   display: flex;
   gap: 10px;
   align-items: center;
+  font-weight: 500;
 }
 
 .error-message button {
   background-color: white;
-  color: red;
+  color: #9904A1;
   border: none;
-  padding: 5px 10px;
-  border-radius: 3px;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.error-message button:hover {
+  background-color: #f0f0f0;
 }
 
 .reconnecting-message {
@@ -92,10 +124,12 @@
   transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: 12px 24px;
+  border-radius: 8px;
   z-index: 30;
+  font-weight: 500;
 }
+
 .center-message {
   display: flex;
   justify-content: center;
@@ -106,4 +140,58 @@
   color: white;
   padding: 20px;
   background-color: #000;
+  font-weight: 500;
+}
+
+.mute-indicator {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  z-index: 30;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+.mute-indicator::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: #ED34A3;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

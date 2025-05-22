@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import dynamic from 'next/dynamic';
 import "./VideoConsultation.css";
 import { API_CONFIG } from '@/config/api';
 
@@ -24,15 +26,17 @@ interface VideoConsultationProps {
   token: string;
 }
 
-const VideoConsultation: React.FC<VideoConsultationProps> = ({
+const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
   appointmentId,
   token,
 }) => {
+  const router = useRouter();
   const [permissionsGranted, setPermissionsGranted] = useState<boolean | null>(null);
   const [agoraCredentials, setAgoraCredentials] = useState<AgoraCredentials | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [agoraRTC, setAgoraRTC] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
 
   const localPlayerRef = useRef<HTMLDivElement>(null);
   const remotePlayerRef = useRef<HTMLDivElement>(null);
@@ -194,6 +198,7 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
     if (audioTrack) {
       const newState = !audioTrack.enabled;
       audioTrack.setEnabled(newState);
+      setIsMuted(!newState);
     }
   };
 
@@ -208,6 +213,7 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
       });
     }
     localTracksRef.current = null;
+    router.push('/appointments');
   };
 
   // Step 4: Render
@@ -230,11 +236,27 @@ const VideoConsultation: React.FC<VideoConsultationProps> = ({
         <div ref={remotePlayerRef} className="video-player remote-video"></div>
       </div>
       <div className="consultation-controls">
-        <button onClick={handleMute}>Mute</button>
+        <button onClick={handleMute} className={isMuted ? 'muted' : ''}>
+          {isMuted ? 'Unmute' : 'Mute'}
+        </button>
         <button onClick={handleEndCall}>End Call</button>
       </div>
+      {isMuted && <div className="mute-indicator">Audio Muted</div>}
     </div>
   );
 };
+
+// Wrap the component with dynamic import and disable SSR
+const VideoConsultation = dynamic(
+  () => Promise.resolve(VideoConsultationComponent),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="video-consultation-container center-message">
+        Loading video consultation...
+      </div>
+    ),
+  }
+);
 
 export default VideoConsultation;
