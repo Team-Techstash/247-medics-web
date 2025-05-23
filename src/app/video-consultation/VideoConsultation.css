@@ -47,43 +47,48 @@
   transform: translateX(-50%);
   z-index: 20;
   display: flex;
-  gap: 15px;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+  padding: 0 1rem;
 }
 
-.consultation-controls button {
-  padding: 12px 24px;
-  color: white;
+.control-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
   border: none;
-  border-radius: 8px;
+  background-color: #ffffff;
   cursor: pointer;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
-  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.consultation-controls button:first-child {
-  background-color: #9904A1;
+.control-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.consultation-controls button:first-child:hover {
-  background-color: #7a0380;
+.control-button.muted {
+  background-color: #ff4444;
+  color: white;
 }
 
-.consultation-controls button:last-child {
-  background-color: #ED34A3;
+.control-button.end-call {
+  background-color: #ff4444;
+  color: white;
 }
 
-.consultation-controls button:last-child:hover {
-  background-color: #d12d92;
+.control-button.disabled {
+  background-color: #ff4444;
+  color: white;
 }
 
-.consultation-controls button.muted {
-  background-color: #666 !important;
-  position: relative;
-}
-
-.consultation-controls button.muted:hover {
-  background-color: #555 !important;
+.control-button svg {
+  font-size: 1.5rem;
 }
 
 .error-message {
@@ -170,6 +175,33 @@
   animation: pulse 2s infinite;
 }
 
+.video-disabled-indicator {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  z-index: 30;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+.video-disabled-indicator::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: #ff4444;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -193,5 +225,111 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+  .local-video {
+    width: 120px;
+    height: 90px;
+    bottom: 100px;
+    right: 10px;
+    border-radius: 8px;
+  }
+
+  .consultation-controls {
+    bottom: 10px;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .control-button {
+    width: 45px;
+    height: 45px;
+  }
+
+  .control-button svg {
+    font-size: 1.2rem;
+  }
+
+  .mute-indicator,
+  .video-disabled-indicator {
+    top: 10px;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .mute-indicator::before,
+  .video-disabled-indicator::before {
+    width: 8px;
+    height: 8px;
+  }
+
+  .error-message {
+    top: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+    width: 90%;
+    max-width: 300px;
+  }
+
+  .error-message button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .reconnecting-message {
+    top: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+    width: 90%;
+    max-width: 300px;
+  }
+
+  .center-message {
+    font-size: 16px;
+    padding: 15px;
+  }
+}
+
+/* Small Mobile Devices */
+@media screen and (max-width: 360px) {
+  .local-video {
+    width: 100px;
+    height: 75px;
+    bottom: 80px;
+  }
+
+  .consultation-controls {
+    gap: 0.3rem;
+  }
+
+  .control-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .control-button svg {
+    font-size: 1rem;
+  }
+}
+
+/* Landscape Mode */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .local-video {
+    width: 160px;
+    height: 120px;
+    bottom: 70px;
+  }
+
+  .consultation-controls {
+    bottom: 5px;
+  }
+
+  .mute-indicator,
+  .video-disabled-indicator {
+    top: 5px;
   }
 }

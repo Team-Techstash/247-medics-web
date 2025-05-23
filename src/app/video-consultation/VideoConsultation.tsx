@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import "./VideoConsultation.css";
 import { API_CONFIG } from '@/config/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMicrophone, faMicrophoneSlash, faPhoneSlash, faVideo, faVideoSlash } from '@fortawesome/free-solid-svg-icons';
 
 // Import types only
 import type {
@@ -37,6 +39,7 @@ const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [agoraRTC, setAgoraRTC] = useState<any>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
   const localPlayerRef = useRef<HTMLDivElement>(null);
   const remotePlayerRef = useRef<HTMLDivElement>(null);
@@ -202,6 +205,15 @@ const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
     }
   };
 
+  const handleVideoToggle = () => {
+    const videoTrack = localTracksRef.current?.[1];
+    if (videoTrack) {
+      const newState = !videoTrack.enabled;
+      videoTrack.setEnabled(newState);
+      setIsVideoEnabled(newState);
+    }
+  };
+
   const handleEndCall = async () => {
     if (clientRef.current) {
       await clientRef.current.leave();
@@ -236,12 +248,18 @@ const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
         <div ref={remotePlayerRef} className="video-player remote-video"></div>
       </div>
       <div className="consultation-controls">
-        <button onClick={handleMute} className={isMuted ? 'muted' : ''}>
-          {isMuted ? 'Unmute' : 'Mute'}
+        <button onClick={handleMute} className={`control-button ${isMuted ? 'muted' : ''}`}>
+          <FontAwesomeIcon icon={isMuted ? faMicrophoneSlash : faMicrophone} />
         </button>
-        <button onClick={handleEndCall}>End Call</button>
+        <button onClick={handleVideoToggle} className={`control-button ${!isVideoEnabled ? 'disabled' : ''}`}>
+          <FontAwesomeIcon icon={isVideoEnabled ? faVideo : faVideoSlash} />
+        </button>
+        <button onClick={handleEndCall} className="control-button end-call">
+          <FontAwesomeIcon icon={faPhoneSlash} />
+        </button>
       </div>
       {isMuted && <div className="mute-indicator">Audio Muted</div>}
+      {!isVideoEnabled && <div className="video-disabled-indicator">Video Disabled</div>}
     </div>
   );
 };

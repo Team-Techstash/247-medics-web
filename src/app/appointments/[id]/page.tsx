@@ -6,10 +6,10 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useRouter } from "next/navigation";
 import { NextPage } from "next";
+import { use } from "react";
 
 interface AppointmentDetailPageProps {
-  // ANY-PROPS-NOTE
-  params: any;
+  params: Promise<{ id: string }>;
 }
 
 const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
@@ -19,6 +19,7 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
   const [appointment, setAppointment] = useState<any>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const resolvedParams = use(params);
 
   useEffect(() => {
     const fetchAppointmentDetails = async () => {
@@ -32,7 +33,7 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
         }
 
         const response = await appointmentsService.getAppointmentById(
-          params.id
+          resolvedParams.id
         );
         if (response.success) {
           setAppointment(response.data);
@@ -48,7 +49,7 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
     };
 
     fetchAppointmentDetails();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   if (error === "Please login to view appointment details") {
     return (
@@ -104,34 +105,36 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
-                {/* Patient Name */}
-                <div>
-                  <div className="text-xs text-gray-500 font-semibold">
-                    Patient Name
-                  </div>
-                  <div className="font-bold text-gray-800">
-                    {appointment.patientId?.firstName}{" "}
-                    {appointment.patientId?.lastName}
-                  </div>
-                </div>
-                {/* Email */}
-                <div>
-                  <div className="text-xs text-gray-500 font-semibold">
-                    Email
-                  </div>
-                  <div className="font-bold text-gray-800">
-                    {appointment.patientId?.email}
-                  </div>
-                </div>
-                {/* Phone */}
-                <div>
-                  <div className="text-xs text-gray-500 font-semibold">
-                    Phone
-                  </div>
-                  <div className="font-bold text-gray-800">
-                    {appointment.patientId?.phone}
-                  </div>
-                </div>
+                {/* Doctor Information - Only show if doctor exists */}
+                {appointment.doctorId && (
+                  <>
+                    <div>
+                      <div className="text-xs text-gray-500 font-semibold">
+                        Doctor Name
+                      </div>
+                      <div className="font-bold text-gray-800">
+                        {appointment.doctorId?.firstName}{" "}
+                        {appointment.doctorId?.lastName}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 font-semibold">
+                        Doctor Email
+                      </div>
+                      <div className="font-bold text-gray-800">
+                        {appointment.doctorId?.email}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 font-semibold">
+                        Doctor Phone
+                      </div>
+                      <div className="font-bold text-gray-800">
+                        {appointment.doctorId?.phone}
+                      </div>
+                    </div>
+                  </>
+                )}
                 {/* Status */}
                 <div>
                   <div className="text-xs text-gray-500 font-semibold">
@@ -157,24 +160,6 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
                   </div>
                   <div className="font-bold text-gray-800">
                     {appointment.appointmentMode}
-                  </div>
-                </div>
-                {/* City */}
-                <div>
-                  <div className="text-xs text-gray-500 font-semibold">
-                    City
-                  </div>
-                  <div className="font-bold text-gray-800">
-                    {appointment.city}
-                  </div>
-                </div>
-                {/* Country */}
-                <div>
-                  <div className="text-xs text-gray-500 font-semibold">
-                    Country
-                  </div>
-                  <div className="font-bold text-gray-800">
-                    {appointment.country}
                   </div>
                 </div>
                 {/* Payment Status */}
@@ -204,13 +189,13 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
                     {appointment.durationMinutes} minutes
                   </div>
                 </div>
-                {/* Created At */}
+                {/* Appointment Time */}
                 <div>
                   <div className="text-xs text-gray-500 font-semibold">
-                    Created At
+                    Appointment Time
                   </div>
                   <div className="font-bold text-gray-800">
-                    {new Date(appointment.createdAt).toLocaleDateString()}
+                    {new Date(appointment.scheduledAt).toLocaleString()}
                   </div>
                 </div>
                 {/* Reason (full width) */}
