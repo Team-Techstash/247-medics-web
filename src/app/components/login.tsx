@@ -90,15 +90,6 @@ export default function Login({ onSubmit, isLoading }: LoginProps) {
             <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
               Sign in to your account
             </h2>
-            <p className="mt-2 text-center text-sm text-white">
-              Or{" "}
-              <Link
-                href="/signup"
-                className="font-medium text-primary hover:text-secondary/80"
-              >
-                create a new account
-              </Link>
-            </p>
           </div>
 
           <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -198,6 +189,15 @@ export default function Login({ onSubmit, isLoading }: LoginProps) {
                     {isLoading ? "Signing in..." : "Sign in"}
                   </button>
                 </div>
+                <p className="mt-2 text-center !text-[14px] text-black">
+                  Don't have an account?{" "}
+                  <Link
+                    href="/signup"
+                    className="text-secondary hover:text-primary/80"
+                  >
+                    create a new account
+                  </Link>
+                </p>
               </form>
             </div>
           </div>
