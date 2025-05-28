@@ -1,21 +1,24 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { appointmentsService } from "@/api/services/service";
 import { showToast } from "@/utils/toast";
 import MainLayout from "../layouts/MainLayout";
+import { io, Socket } from "socket.io-client";
 
 export default function Find() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const appointmentId = searchParams.get("id");
+    const socketRef = useRef<Socket | null>(null);
 
     const [appointment, setAppointment] = useState<any>(null);
     const [respondedDoctors, setRespondedDoctors] = useState<any[]>([]);
     const [selectedResponse, setSelectedResponse] = useState<any>(null);
+    const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
         if (appointmentId) {
@@ -24,7 +27,6 @@ export default function Find() {
                     const response = await appointmentsService.getAppointmentById(appointmentId);
                     if (response.success) {
                         setAppointment(response.data);
-                        console.log(response)
                         setRespondedDoctors(response.data.respondedDoctors)
 
                     } else {
@@ -37,6 +39,50 @@ export default function Find() {
 
             fetchAppointment();
         }
+    }, [appointmentId]);
+
+    useEffect(() => {
+        if (!appointmentId) return;
+
+        // Initialize Socket.io connection
+        socketRef.current = io("https://two47-medics-api.onrender.com", {
+            query: { appointmentId },
+            transports: ["websocket"],
+        });
+
+        socketRef.current.on("connect", () => {
+            console.log('Socket.io connected');
+            setIsConnected(true);
+        });
+
+        socketRef.current.on("doctor-respond", (data: any) => {
+            console.log('New doctor response:', data);
+            showToast.success(`New response from Dr. ${data.doctorId?.firstName} ${data.doctorId?.lastName}`);
+            
+            setRespondedDoctors(prev => {
+                // Check if this doctor already responded to avoid duplicates
+                const exists = prev.some(doc => 
+                    doc.doctorId?._id === data.doctorId?._id
+                );
+                return exists ? prev : [...prev, data];
+            });
+        });
+
+        socketRef.current.on("disconnect", () => {
+            console.log('Socket.io disconnected');
+            setIsConnected(false);
+        });
+
+        socketRef.current.on("error", (error: any) => {
+            console.error('Socket.io error:', error);
+            showToast.error('Connection error. Please refresh the page.');
+        });
+
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
     }, [appointmentId]);
 
     const handlePaymentClick = () => {
