@@ -53,9 +53,25 @@ export default function Find() {
         socketRef.current.on("connect", () => {
             console.log('Socket.io connected');
             setIsConnected(true);
+            
+            const token = localStorage.getItem("authToken");
+            if (token) {
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    const { id: userId } = JSON.parse(jsonPayload);
+                    
+                    socketRef.current?.emit("connectRealTime", { userId });
+                } catch (error) {
+                    console.error('Error decoding token:', error);
+                }
+            }
         });
 
-        socketRef.current.on("doctor-respond", (data: any) => {
+        socketRef.current.on("doctorResponded", (data: any) => {
             console.log('New doctor response:', data);
             showToast.success(`New response from Dr. ${data.doctorId?.firstName} ${data.doctorId?.lastName}`);
             
