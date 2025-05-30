@@ -3,13 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/api/services/service";
 import {
     RegisterFormData,
     RegisterFormErrors,
 } from "../../api/types/auth.types";
 import { motion } from "framer-motion";
+import { GoogleLogin } from '@react-oauth/google';
+import Cookies from "js-cookie";
+import { showToast } from "@/utils/toast";
 
 type SignUp = {
     onSubmit: (formData: any) => void;
@@ -17,6 +20,7 @@ type SignUp = {
 };
 export default function SignUp({ onSubmit, isLoading }: SignUp) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -31,6 +35,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
     });
     const [errors, setErrors] = useState<RegisterFormErrors>({});
     const [error, setError] = useState("");
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -98,6 +103,55 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
             return;
         }
         onSubmit(formData);
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        console.log('Google Sign-In Response:', credentialResponse);
+        setIsGoogleLoading(true);
+        try {
+            if (!credentialResponse.credential) {
+                console.error('No credential received from Google');
+                throw new Error('No credential received from Google');
+            }
+
+            console.log('Attempting to sign up with Google token...');
+            const response = await authService.googleSignUp({
+                googleAuthToken: credentialResponse.credential,
+                role: "patient"
+            });
+            
+            console.log('Google Sign-Up Response:', response);
+            
+            if (response.token) {
+                console.log('Token received, storing in cookies and localStorage...');
+                // Store the token in both cookie and localStorage
+                Cookies.set('authToken', response.token, { expires: 7 });
+                localStorage.setItem('authToken', response.token);
+                
+                // Get the redirect path from query params, default to home
+                const from = searchParams.get('from') || '/';
+                console.log('Redirecting to:', from);
+                showToast.success('Sign up successful!');
+                router.push(from);
+            } else {
+                console.error('No token in response:', response);
+                showToast.error(response.message || 'Failed to sign up with Google');
+            }
+        } catch (error: any) {
+            console.error('Google sign up error details:', {
+                message: error.message,
+                response: error.response,
+                stack: error.stack
+            });
+            showToast.error(error.message || 'Failed to sign up with Google');
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        console.error('Google sign up failed');
+        showToast.error('Google sign up failed. Please try again.');
     };
 
     return (
@@ -328,7 +382,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                     )}
                                 </div>
 
-                                <div>
+                                 <div>
                                     <button
                                         type="submit"
                                         disabled={isLoading}
@@ -337,6 +391,36 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                         {isLoading ? "Creating account..." : "Create account"}
                                     </button>
                                 </div>
+
+                                <div className="mt-6">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className="w-full border-t border-gray-300" />
+                                        </div>
+                                        <div className="relative flex justify-center text-sm">
+                                            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6">
+                                        {isGoogleLoading ? (
+                                            <div className="flex items-center justify-center w-full h-10 bg-gray-100 rounded-md">
+                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                                            </div>
+                                        ) : (
+                                            <GoogleLogin
+                                                onSuccess={handleGoogleSuccess}
+                                                onError={handleGoogleError}
+                                                useOneTap
+                                                theme="filled_blue"
+                                                shape="rectangular"
+                                                text="signup_with"
+                                                width="100%"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
                                 <p className="mt-2 text-center !text-[14px] text-black">
                                     Already have an account?{" "}
                                     <Link

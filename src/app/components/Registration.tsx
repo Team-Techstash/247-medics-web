@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setAppointmentForm } from "@/redux/slices/appointmentFormSlice";
+import AutoCompleteComponent from "@/utils/google";
+import { referenceService } from "@/api/services/service";
 
 const sections = [
   {
@@ -192,7 +194,6 @@ const sections = [
 interface FormData {
   age: number;
   isForSelf: boolean;
-  status: string;
   country: string;
   city: string;
   serviceType: string;
@@ -209,6 +210,16 @@ interface FormData {
 type CreateAppointmentProps = {
   onSubmit: (formData: any) => void;
 };
+type Service = {
+  id: number;
+  code: string;
+  name: string;
+};
+
+type ServicesMap = {
+  [key: string]: Service;
+};
+
 
 export default function CreateAppointment({
   onSubmit,
@@ -227,7 +238,7 @@ export default function CreateAppointment({
   const [authToken, setAuthToken] = useState<string | null>(null);
   const dispatch = useDispatch();
   const formData = useSelector((state: RootState) => state.appointmentForm);
-
+  const [services, setServices] = useState<ServicesMap>({});
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -239,6 +250,7 @@ export default function CreateAppointment({
       const token = localStorage.getItem("authToken");
       setAuthToken(token);
     }
+    loadReferences()
   }, []);
 
   const determineInitialStep = () => {
@@ -320,6 +332,28 @@ export default function CreateAppointment({
     console.log(formData, stepErrors);
 
     return stepErrors;
+  };
+
+  const handleLocationSelect = (location: { lat: number; lng: number; city: string; country: string }) => {
+    console.log('Selected location:', location);
+    dispatch(setAppointmentForm({
+      city: location.city,
+      country: location.country
+    }));
+  };
+
+  const loadReferences = async () => {
+    try {
+      const response = await referenceService.getReferences();
+      if (response && response.data) {
+        console.log(response.data.SERVICE_TYPES)
+        setServices(response.data.SERVICE_TYPES)
+      } else {
+        console.error(response.message || "Failed to create appointment.");
+      }
+    } catch (err: any) {
+      console.error(err.message || "Failed to create appointment.");
+    }
   };
 
   return (
@@ -410,11 +444,11 @@ export default function CreateAppointment({
                           </p>
                         )}
                       </div>
-                      <small className="block">
+                      {/* <small className="block">
                         Specify symptoms or medication needed so doctors can
                         assist. Your request is fully anonymized; doctors see
                         only the description. Avoid personal details.
-                      </small>
+                      </small> */}
                     </div>
                     {!authToken && (
                       <div className="mb-8">
@@ -478,17 +512,15 @@ export default function CreateAppointment({
                     <div className="mb-8">
                       <div className="mb-3">
                         <label
-                          htmlFor=""
+                          htmlFor="city"
                           className="block mb-3 font-semibold text-sm 2xl:text-lg"
                         >
                           What city are you in?
                         </label>
-                        <input
-                          type="text"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleChange}
-                          className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg"
+                        <AutoCompleteComponent
+                          setLocation={(location) => {
+                            handleLocationSelect(location);
+                          }}
                         />
                         {errors.city && (
                           <p className="text-red-500 !text-sm mt-2">
@@ -506,31 +538,26 @@ export default function CreateAppointment({
                           Which type of healthcare service do you need?
                         </label>
                         <div className="flex flex-wrap gap-3">
-                          {[
-                            "Primary Care",
-                            "Pediatrics",
-                            "Dermatology",
-                            "Mental Health",
-                          ].map((type) => (
+                          {Object.entries(services).map(([key, type]) => (
                             <label
-                              key={type}
-                              className={`cursor-pointer rounded-full px-5 py-2 text-sm 2xl:text-lg transition-all ${
-                                formData.serviceType === type
+                              key={key}
+                              className={`cursor-pointer rounded-full px-5 py-2 text-sm 2xl:text-lg transition-all ${formData.serviceType === type.code
                                   ? "bg-[#9904A160] text-black"
                                   : "bg-gray-200 text-black"
-                              }`}
+                                }`}
                             >
                               <input
                                 type="radio"
                                 name="serviceType"
-                                value={type}
-                                checked={formData.serviceType === type}
+                                value={type.code}
+                                checked={formData.serviceType === type.code}
                                 onChange={handleChange}
                                 className="hidden"
                               />
-                              {type}
+                              {type.name}
                             </label>
                           ))}
+
                         </div>
                         {errors.serviceType && (
                           <p className="text-red-500 !text-sm mt-2">
@@ -644,7 +671,7 @@ export default function CreateAppointment({
                           How old are you?
                         </label>
                         <input
-                          type="text"
+                          type="number"
                           value={formData.age}
                           onChange={handleChange}
                           name="age"
@@ -694,47 +721,21 @@ export default function CreateAppointment({
                         </p>
                       )}
                     </div>
-                    <div className="mb-8">
+                    <div className="mb-3">
                       <label
                         htmlFor=""
                         className="block mb-3 font-semibold text-sm 2xl:text-lg"
                       >
-                        Your pronouns (optional)
+                        Your Pronouns (optional)
                       </label>
-                      <div className="grid lg:grid-cols-2 gap-4">
-                        <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                          <input
-                            type="radio"
-                            name="pronouns"
-                            checked={formData.pronouns === "male"}
-                            onChange={handleChange}
-                            value="male"
-                            className="mr-2"
-                          />
-                          Male
-                        </label>
-                        <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                          <input
-                            type="radio"
-                            name="pronouns"
-                            checked={formData.pronouns === "female"}
-                            onChange={handleChange}
-                            value="female"
-                            className="mr-2"
-                          />
-                          Female
-                        </label>
-                        <label className="flex items-center border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4  text-sm 2xl:text-lg">
-                          <input
-                            type="radio"
-                            name="pronouns"
-                            checked={formData.pronouns === "other"}
-                            onChange={handleChange}
-                            value="other"
-                            className="mr-2"
-                          />
-                          Other
-                        </label>
+                      <div>
+                        <input
+                          type="text"
+                          name="pronouns"
+                          value={formData.pronouns}
+                          onChange={handleChange}
+                          className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg"
+                        />
                       </div>
                     </div>
                     {!authToken && (

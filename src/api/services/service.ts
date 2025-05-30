@@ -1,4 +1,4 @@
-import { AUTH_ROUTES, APPOINTMENTS_ROUTES } from '../routes/api';
+import { AUTH_ROUTES, APPOINTMENTS_ROUTES, REFERENCE_ROUTES } from '../routes/api';
 import { API_CONFIG } from '@/config/api';
 import {
     LoginRequest,
@@ -71,6 +71,14 @@ export const authService = {
             body: JSON.stringify(data),
         });
     },
+
+    // Register with Google
+    googleSignUp: async (data: { googleAuthToken: string; role: string }): Promise<RegisterResponse> => {
+        return apiCall(AUTH_ROUTES.REGISTER.GOOGLE, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
 };
 
 export const appointmentsService = {
@@ -113,5 +121,15 @@ export const appointmentsService = {
 //         },
 //     });
 // },
+
+};
+
+export const referenceService = {
+
+    getReferences: async (): Promise<any> => {
+        return apiCall(REFERENCE_ROUTES.GET_REFERENCES, {
+            method: 'GET',
+        });
+    },
 
 };
