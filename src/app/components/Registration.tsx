@@ -205,6 +205,7 @@ interface FormData {
   visitType: string;
   appointmentMode: string;
   reason: string;
+  formattedAddress: string;
 }
 
 type CreateAppointmentProps = {
@@ -334,11 +335,11 @@ export default function CreateAppointment({
     return stepErrors;
   };
 
-  const handleLocationSelect = (location: { lat: number; lng: number; city: string; country: string }) => {
-    console.log('Selected location:', location);
+  const handleLocationSelect = (location: { lat: number; lng: number; city: string; country: string; formattedAddress: string }) => {
     dispatch(setAppointmentForm({
       city: location.city,
-      country: location.country
+      country: location.country,
+      formattedAddress: location.formattedAddress
     }));
   };
 
@@ -346,7 +347,6 @@ export default function CreateAppointment({
     try {
       const response = await referenceService.getReferences();
       if (response && response.data) {
-        console.log(response.data.SERVICE_TYPES)
         setServices(response.data.SERVICE_TYPES)
       } else {
         console.error(response.message || "Failed to create appointment.");
@@ -521,6 +521,8 @@ export default function CreateAppointment({
                           setLocation={(location) => {
                             handleLocationSelect(location);
                           }}
+                          currentCity={formData.city}
+                          currentFormattedAddress={formData.formattedAddress}
                         />
                         {errors.city && (
                           <p className="text-red-500 !text-sm mt-2">

@@ -5,6 +5,7 @@ interface AppointmentFormData {
   isForSelf: boolean;
   country: string;
   city: string;
+  formattedAddress: string;
   serviceType: string;
   firstName: string;
   lastName: string;
@@ -21,6 +22,7 @@ const initialState: AppointmentFormData = {
   isForSelf: true,
   country: '',
   city: '',
+  formattedAddress: '',
   serviceType: '',
   firstName: '',
   lastName: '',
