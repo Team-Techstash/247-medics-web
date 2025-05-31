@@ -9,7 +9,13 @@ export const AUTH_ROUTES = {
     // Registration routes
     REGISTER: {
         EMAIL: 'users/email-signup',
-        GOOGLE: 'users/google-signup',
+        GOOGLE: 'users/google-auth',
+    },
+    // Profile routes
+    PROFILE: {
+        UPDATE: (id: string) => `users/${id}`,
+        GET_USER: 'users/profile',
+        REFRESH_TOKEN: 'users/refresh-token'
     },
 } as const; 
 

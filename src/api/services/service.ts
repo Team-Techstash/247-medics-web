@@ -4,7 +4,8 @@ import {
     LoginRequest,
     ApiResponse,
     LoginResponse,
-    RegisterResponse
+    RegisterResponse,
+    User
 } from '../types/auth.types';
 
 // Base API URL
@@ -43,7 +44,7 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const authService = {
     // Login with email
-    login: async (data: LoginRequest): Promise<LoginResponse> => {
+    login: async (data: LoginRequest): Promise<any> => {
         return apiCall(AUTH_ROUTES.LOGIN.EMAIL, {
             method: 'POST',
             body: JSON.stringify(data),
@@ -77,6 +78,24 @@ export const authService = {
         return apiCall(AUTH_ROUTES.REGISTER.GOOGLE, {
             method: 'POST',
             body: JSON.stringify(data),
+        });
+    },
+
+    // Update user profile
+    updateProfile: async (data: Partial<User>, userId: string): Promise<any> => {
+        return apiCall(AUTH_ROUTES.PROFILE.UPDATE(userId), {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+     getProfile: async (): Promise<any> => {
+        return apiCall(AUTH_ROUTES.PROFILE.GET_USER, {
+            method: 'GET',
+        });
+    },
+    refreshToken: async (): Promise<any> => {
+        return apiCall(AUTH_ROUTES.PROFILE.REFRESH_TOKEN, {
+            method: 'POST',
         });
     },
 };

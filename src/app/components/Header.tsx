@@ -1,17 +1,16 @@
 "use client"; // Ensure this runs on the client side
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import Button2 from "./Button2";
-import { Menu, X, User, Search } from "lucide-react";
+import { Menu, X, User, Search, ChevronDown } from "lucide-react";
 import { showToast } from "@/utils/toast";
 import Cookies from 'js-cookie';
 import { resetAppointmentForm } from '@/redux/slices/appointmentFormSlice';
 import { useDispatch } from 'react-redux';
-
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +20,7 @@ const Header = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
     const dispatch = useDispatch();
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -29,14 +29,43 @@ const Header = () => {
         }
     }, []);
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     const handleLogout = () => {
         localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
         Cookies.remove("authToken");
         setAuthToken(null);
         setShowDropdown(false);
         dispatch(resetAppointmentForm());
         showToast.success("Logged out successfully");
         router.push("/");
+    };
+
+    const handleSeeDoctorClick = (e: React.MouseEvent) => {
+        if (authToken) {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (!user.isProfileComplete) {
+                    e.preventDefault();
+                    router.push('/profile');
+                    showToast.warning('Please complete your profile first');
+                    return;
+                }
+            }
+        }
     };
 
     const handleSearch = (e: React.FormEvent) => {
@@ -60,7 +89,7 @@ const Header = () => {
     ];
 
     return (
-        <header className="bg-white py-4 px-6 fixed top-0 left-0 w-full z-50">
+        <header className="bg-white py-4 px-6 fixed top-0 left-0 w-full z-50 shadow-lg">
             <div className="container mx-auto">
                 <div className="flex justify-between items-center">
                     {/* Logo */}
@@ -87,17 +116,37 @@ const Header = () => {
                         ))}
                     </nav>
 
-                    {/* CTA Button and Login Icon (Hidden on Mobile) */}
+                    {/* CTA Button and User Menu (Hidden on Mobile) */}
                     <div className="hidden md:flex items-center space-x-4">
                         <div className="flex items-center gap-8">
-                            <Button2 text="See A Doctor" href="/create-appointment" style="primary" />
+                            <Button2 text="See A Doctor" href="/create-appointment" style="primary" onClick={handleSeeDoctorClick} />
                             {authToken ? (
-                                <button
-                                    onClick={() => handleLogout()}
-                                    className="text-primary hover:text-secondary transition-colors"
-                                >
-                                    Logout
-                                </button>
+                                <div className="relative" ref={dropdownRef}>
+                                    <button
+                                        onClick={() => setShowDropdown(!showDropdown)}
+                                        className="flex items-center gap-2 text-primary hover:text-secondary transition-colors"
+                                    >
+                                        <User size={24} />
+                                        <ChevronDown size={16} />
+                                    </button>
+                                    {showDropdown && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                            <Link
+                                                href="/profile"
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                onClick={() => setShowDropdown(false)}
+                                            >
+                                                View Profile
+                                            </Link>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            >
+                                                Logout
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <Link href="/login" className="text-primary hover:text-secondary transition-colors">
                                     <User size={24} />
@@ -151,10 +200,32 @@ const Header = () => {
                                 {label}
                             </Link>
                         ))}
-                        <Button2 text="See A Doctor" href="/appointment" style="primary" />
-                        <Link href="/login" className="text-xl text-primary hover:text-secondary transition-colors" onClick={() => setIsOpen(false)}>
-                            <User size={24} />
-                        </Link>
+                        <Button2 text="See A Doctor" href="/appointment" style="primary" onClick={handleSeeDoctorClick} />
+                        {authToken ? (
+                            <>
+                                <Link
+                                    href="/profile"
+                                    className="text-xl text-primary hover:text-secondary transition-colors"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    View Profile
+                                </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="text-xl text-primary hover:text-secondary transition-colors"
+                                >
+                                    Logout
+                                </button>
+                            </>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="text-xl text-primary hover:text-secondary transition-colors"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <User size={24} />
+                            </Link>
+                        )}
                     </motion.div>
                 )}
             </div>

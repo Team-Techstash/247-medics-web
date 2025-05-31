@@ -35,11 +35,12 @@ export interface ApiResponse<T = any> {
 
 // User Types
 export interface User {
-    id: string;
+    _id: string;
     firstName: string;
     lastName: string;
+    pronouns?: string;
     email: string;
-    // Add other user properties as needed
+    phone?: string;
 }
 
 // Auth Response Types
@@ -53,8 +54,5 @@ export interface LoginResponse extends ApiResponse {
 
 export interface RegisterResponse extends ApiResponse {
     token?: string;
-    data?: {
-        token: string;
-        user: User;
-    };
+    user?:User;
 } 

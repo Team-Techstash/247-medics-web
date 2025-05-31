@@ -84,11 +84,11 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
         }
         if (!confirmPassword.trim()) {
             newErrors.confirmPassword = "Confirm Password is required";
-             isValid = false;
-        } 
-        if ( confirmPassword !== formData.password) {
+            isValid = false;
+        }
+        if (confirmPassword !== formData.password) {
             newErrors.confirmPassword = "Passwords do not match";
-             isValid = false;
+            isValid = false;
         }
 
         setErrors(newErrors);
@@ -114,20 +114,22 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                 throw new Error('No credential received from Google');
             }
 
-            console.log('Attempting to sign up with Google token...');
             const response = await authService.googleSignUp({
                 googleAuthToken: credentialResponse.credential,
                 role: "patient"
             });
-            
+
             console.log('Google Sign-Up Response:', response);
-            
+            Cookies.set('authToken', response?.token, { expires: 7 });
+            localStorage.setItem('authToken', response?.token);
+            localStorage.setItem("user", JSON.stringify(response?.user));
+
             if (response.token) {
                 console.log('Token received, storing in cookies and localStorage...');
                 // Store the token in both cookie and localStorage
                 Cookies.set('authToken', response.token, { expires: 7 });
                 localStorage.setItem('authToken', response.token);
-                
+
                 // Get the redirect path from query params, default to home
                 const from = searchParams.get('from') || '/';
                 console.log('Redirecting to:', from);
@@ -382,7 +384,7 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                                     )}
                                 </div>
 
-                                 <div>
+                                <div>
                                     <button
                                         type="submit"
                                         disabled={isLoading}
