@@ -674,7 +674,7 @@ export default function CreateAppointment({
                         </label>
                         <input
                           type="number"
-                          value={formData.age}
+                          value={formData.age || ''}
                           onChange={handleChange}
                           name="age"
                           className="block w-full border rounded-lg 2xl:rounded-2xl px-4 py-2 2xl:px-6 2xl:py-4 hover:bg-primary/[.1] outline-0 text-sm 2xl:text-lg"

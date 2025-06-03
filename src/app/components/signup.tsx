@@ -119,16 +119,12 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
                 role: "patient"
             });
 
-            console.log('Google Sign-Up Response:', response);
-            Cookies.set('authToken', response?.token, { expires: 7 });
-            localStorage.setItem('authToken', response?.token);
-            localStorage.setItem("user", JSON.stringify(response?.user));
-
             if (response.token) {
                 console.log('Token received, storing in cookies and localStorage...');
                 // Store the token in both cookie and localStorage
                 Cookies.set('authToken', response.token, { expires: 7 });
                 localStorage.setItem('authToken', response.token);
+                localStorage.setItem("user", JSON.stringify(response?.user));
 
                 // Get the redirect path from query params, default to home
                 const from = searchParams.get('from') || '/';

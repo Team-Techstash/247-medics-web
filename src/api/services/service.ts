@@ -66,7 +66,7 @@ export const authService = {
     },
 
     // Register with email
-    register: async (data: any): Promise<RegisterResponse> => {
+    register: async (data: any): Promise<any> => {
         return apiCall(AUTH_ROUTES.REGISTER.EMAIL, {
             method: 'POST',
             body: JSON.stringify(data),
