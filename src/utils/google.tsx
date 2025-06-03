@@ -7,7 +7,7 @@ type AutoCompleteComponentProps = {
   currentFormattedAddress?: string;
 };
 
-let libraries: any = ['places'];
+const libraries: ("places")[] = ["places"];
 
 export default function AutoCompleteComponent({ setLocation, currentCity, currentFormattedAddress }: AutoCompleteComponentProps) {
   const [autoCom, setAutoCom] = useState<google.maps.places.Autocomplete | null>(null);
@@ -24,7 +24,7 @@ export default function AutoCompleteComponent({ setLocation, currentCity, curren
     setApiKey(key);
 
     // Check if Google Maps API is already loaded
-    if (window.google && window.google.maps) {
+    if (window.google && window.google.maps && window.google.maps.places) {
       setIsScriptLoaded(true);
     }
   }, []);
@@ -46,10 +46,6 @@ export default function AutoCompleteComponent({ setLocation, currentCity, curren
   };
 
   const onScriptError = (error: Error) => {
-    // If the error is about the API being already loaded, we can consider it loaded
-    if (error.message.includes('already presented')) {
-      setIsScriptLoaded(true);
-    }
     console.error('Error loading Google Maps API:', error);
   };
 
@@ -122,23 +118,6 @@ export default function AutoCompleteComponent({ setLocation, currentCity, curren
     );
   }
 
-  // If Google Maps API is already loaded, render Autocomplete directly
-  if (isScriptLoaded) {
-    return (
-      <Autocomplete
-        onLoad={onLoad}
-        onPlaceChanged={onPlaceChanged}
-        options={{
-          types: ['(cities)'],
-          fields: ['address_components', 'geometry', 'formatted_address'],
-        }}
-      >
-        {renderInput()}
-      </Autocomplete>
-    );
-  }
-
-  // Otherwise, use LoadScript to load the API
   return (
     <LoadScript
       googleMapsApiKey={apiKey}
