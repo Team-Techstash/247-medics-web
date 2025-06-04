@@ -123,7 +123,7 @@ export default function Find() {
                                     onClick={() => setSelectedResponse(item)}
                                 >
                                     <h3 className="font-medium text-[#9904A1] text-md">
-                                        Dr. {item.doctorId?.firstName} {item.doctorId?.lastName}
+                                        Dr. {item.doctor?.firstName} {item.doctor?.lastName}
                                     </h3>
                                     <p className="text-sm text-gray-600 mt-1">
                                         Appointment Time: {item.dateTime
