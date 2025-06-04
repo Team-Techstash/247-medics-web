@@ -19,7 +19,6 @@ interface Appointment {
     email?: string;
     phone?: string;
     paymentStatus?: string;
-    scheduledAt?: string;
     doctorId?: {
         firstName: string;
         lastName: string;
