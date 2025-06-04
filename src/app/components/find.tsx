@@ -1,23 +1,27 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { appointmentsService } from "@/api/services/service";
 import { showToast } from "@/utils/toast";
 import MainLayout from "../layouts/MainLayout";
+
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { io, Socket } from "socket.io-client";
 
 
 export default function Find() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const appointmentId = searchParams.get("id");
+    const socketRef = useRef<Socket | null>(null);
 
     const [appointment, setAppointment] = useState<any>(null);
     const [respondedDoctors, setRespondedDoctors] = useState<any[]>([]);
     const [selectedResponse, setSelectedResponse] = useState<any>(null);
+    const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
         if (appointmentId) {
@@ -41,6 +45,57 @@ export default function Find() {
         }
     }, [appointmentId]);
 
+    useEffect(() => {
+        if (!appointmentId) return;
+        // Initialize Socket.io connection
+        socketRef.current = io("https://two47-medics-api.onrender.com", {
+            query: { appointmentId },
+            transports: ["websocket"],
+        });
+        socketRef.current.on("connect", () => {
+            console.log('Socket.io connected');
+            setIsConnected(true);
+            const token = localStorage.getItem("authToken");
+            if (token) {
+                try {
+                    // const base64Url = token.split('.')[1];
+                    // const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    // const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    //     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    // }).join(''));
+                    // const { id: userId } = JSON.parse(jsonPayload);
+                    socketRef.current?.emit("register", { token });
+                } catch (error) {
+                    console.error('Error decoding token:', error);
+                }
+            }
+        });
+        socketRef.current.on("doctorResponded", (data: any) => {
+            console.log('New doctor response:', data);
+            showToast.success(`New response from Dr. ${data.doctor?.firstName} ${data.doctor?.lastName}`);
+            setRespondedDoctors(prev => {
+                // Check if this doctor already responded to avoid duplicates
+                const exists = prev.some(doc =>
+                    doc.doctor?._id === data.doctor?._id
+                );
+                return exists ? prev : [...prev, data];
+            });
+        });
+        socketRef.current.on("disconnect", () => {
+            console.log('Socket.io disconnected');
+            setIsConnected(false);
+        });
+        socketRef.current.on("error", (error: any) => {
+            console.error('Socket.io error:', error);
+            showToast.error('Connection error. Please refresh the page.');
+        });
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
+    }, [appointmentId]);
+
     const handlePaymentClick = () => {
         if (!selectedResponse) {
             showToast.error('Please select a doctor response first');
@@ -56,9 +111,11 @@ export default function Find() {
         <MainLayout>
             <div className="container mx-auto px-4 py-8">
                 <div className="bg-white rounded-3xl ">
+
                     {respondedDoctors.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
                             <AiOutlineLoading3Quarters className="w-12 h-12 text-[#9904A1] animate-spin" />
+
 
                             <h2 className="text-lg text-[#9904A1] max-w-lg">
                                 We've sent your request to the relevant doctors. Please wait for the doctors to respond to your request.
@@ -81,7 +138,7 @@ export default function Find() {
                                         onClick={() => setSelectedResponse(item)}
                                     >
                                         <h3 className="font-medium text-[#9904A1] text-md">
-                                            Dr. {item.doctorId?.firstName} {item.doctorId?.lastName}
+                                            Dr. {item.doctor?.firstName} {item.doctor?.lastName}
                                         </h3>
                                         <p className="text-sm text-gray-600 mt-1">
                                             Appointment Time: {item.dateTime
@@ -104,7 +161,7 @@ export default function Find() {
                                         <div className="bg-white shadow-md border border-gray-200 rounded-2xl">
                                             <h2 className="text-lg bg-[#faf8fc] font-semibold text-[#9904A1] mb-2 border-b border-gray-200 py-2 px-5 rounded-t-2xl ">Doctor Details</h2>
                                             <div className="p-5">
-                                                <p className="text-gray-700"><span className="font-medium">Name:</span> Dr. {selectedResponse.doctorId?.firstName} {selectedResponse.doctorId?.lastName}</p>
+                                                <p className="text-gray-700"><span className="font-medium">Name:</span> Dr. {selectedResponse.doctor?.firstName} {selectedResponse.doctor?.lastName}</p>
                                                 {/* <p className="text-gray-700"><span className="font-medium">Email:</span> {selectedResponse.doctorId?.email}</p> */}
                                             </div>
 

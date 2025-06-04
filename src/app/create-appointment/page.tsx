@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreateAppointment from "../components/Registration";
 import MainLayout from "../layouts/MainLayout";
 import { appointmentsService } from "@/api/services/service";
@@ -13,7 +13,6 @@ export default function CreateAppointmentPage() {
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
-
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);

@@ -32,7 +32,7 @@ export default function SignUpPage() {
                 showToast.success('SignUp successful!');
                 Cookies.set('authToken', response.token, { expires: 7 }); 
                 localStorage.setItem("authToken", response.token);
-                
+                localStorage.setItem('user', JSON.stringify(response.user));
                 // Get the redirect path from query params, default to home
                 const from = searchParams.get('from') || '/';
                 router.push(from);

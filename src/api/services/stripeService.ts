@@ -1,5 +1,7 @@
 import { appointmentsService } from './service';
-const API_BASE_URL = 'http://3.14.150.170:5000/api';
+import { API_CONFIG } from '@/config/api';
+
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 export const stripeService = {
     createPaymentIntent: async (data: {

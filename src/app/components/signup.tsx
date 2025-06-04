@@ -3,350 +3,436 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/api/services/service";
 import {
-  RegisterFormData,
-  RegisterFormErrors,
+    RegisterFormData,
+    RegisterFormErrors,
 } from "../../api/types/auth.types";
 import { motion } from "framer-motion";
+import { GoogleLogin } from '@react-oauth/google';
+import Cookies from "js-cookie";
+import { showToast } from "@/utils/toast";
 
 type SignUp = {
-  onSubmit: (formData: any) => void;
-  isLoading?: boolean;
+    onSubmit: (formData: any) => void;
+    isLoading?: boolean;
 };
 export default function SignUp({ onSubmit, isLoading }: SignUp) {
-  const router = useRouter();
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState<RegisterFormData>({
-    firstName: "",
-    lastName: "",
-    pronouns: "",
-    email: "",
-    phone: "",
-    password: "",
-    role: "patient",
-  });
-  const [errors, setErrors] = useState<RegisterFormErrors>({});
-  const [error, setError] = useState("");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [formData, setFormData] = useState<RegisterFormData>({
+        firstName: "",
+        lastName: "",
+        pronouns: "",
+        email: "",
+        phone: "",
+        password: "",
+        role: "patient",
+    });
+    const [errors, setErrors] = useState<RegisterFormErrors>({});
+    const [error, setError] = useState("");
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (errors[name as keyof RegisterFormErrors]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
-    }
-  };
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+        if (errors[name as keyof RegisterFormErrors]) {
+            setErrors((prev) => ({
+                ...prev,
+                [name]: undefined,
+            }));
+        }
+    };
 
-  const validate = () => {
-    const newErrors: RegisterFormErrors = {};
-    let isValid = true;
+    const validate = () => {
+        const newErrors: RegisterFormErrors = {};
+        let isValid = true;
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-      isValid = false;
-    }
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-      isValid = false;
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-      isValid = false;
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-      isValid = false;
-    }
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-      isValid = false;
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long";
-      isValid = false;
-    }
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Confirm Password is required";
-    } else if (formData.password && confirmPassword !== formData.password) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
+        if (!formData.firstName.trim()) {
+            newErrors.firstName = "First name is required";
+            isValid = false;
+        }
+        if (!formData.lastName.trim()) {
+            newErrors.lastName = "Last name is required";
+            isValid = false;
+        }
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "Please enter a valid email address";
+            isValid = false;
+        }
+        if (!formData.phone.trim()) {
+            newErrors.phone = "Phone number is required";
+            isValid = false;
+        }
+        if (!formData.password) {
+            newErrors.password = "Password is required";
+            isValid = false;
+        } else if (formData.password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters long";
+            isValid = false;
+        }
+        if (!confirmPassword.trim()) {
+            newErrors.confirmPassword = "Confirm Password is required";
+            isValid = false;
+        }
+        if (confirmPassword !== formData.password) {
+            newErrors.confirmPassword = "Passwords do not match";
+            isValid = false;
+        }
 
-    setErrors(newErrors);
-    return isValid;
-  };
+        setErrors(newErrors);
+        console.log(errors)
+        return isValid;
+    };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    if (Object.keys(errors).length !== 0) {
-      return;
-    }
-    onSubmit(formData);
-  };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!validate()) return;
+        if (Object.keys(errors).length !== 0) {
+            return;
+        }
+        onSubmit(formData);
+    };
 
-  return (
-    <section className="relative py-10 px-6 2xl:py-18 -mt-18 lg:h-full flex items-center">
-      <div
-        className="fixed top-0 left-0 w-full h-full object-cover object-center -z-10"
-        style={{
-          backgroundImage: "url('/bg.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
-      <div className=" absolute top-20 left-0 w-full h-fit bg-black/[.5] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="container mx-auto relative h-full"
-        >
-          <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <Link href="/" className="flex justify-center">
-              <Image
-                src="/images/logo.svg"
-                alt="24/7 Medics"
-                width={150}
-                height={50}
-                className="mx-auto"
-              />
-            </Link>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-              Create your account
-            </h2>
-            <p className="mt-2 text-center text-sm text-white">
-              Already have an account?{" "}
-              <Link
-                href="/login"
-                className="font-medium text-primary hover:text-secondary/80"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        console.log('Google Sign-In Response:', credentialResponse);
+        setIsGoogleLoading(true);
+        try {
+            if (!credentialResponse.credential) {
+                console.error('No credential received from Google');
+                throw new Error('No credential received from Google');
+            }
 
-          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                    {error}
-                  </div>
-                )}
+            const response = await authService.googleSignUp({
+                googleAuthToken: credentialResponse.credential,
+                role: "patient"
+            });
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="firstName"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      First name
-                    </label>
-                    <div className="mt-1">
-                      <input
-                        id="firstName"
-                        name="firstName"
-                        type="text"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                      />
+            if (response.token) {
+                console.log('Token received, storing in cookies and localStorage...');
+                // Store the token in both cookie and localStorage
+                Cookies.set('authToken', response.token, { expires: 7 });
+                localStorage.setItem('authToken', response.token);
+                localStorage.setItem("user", JSON.stringify(response?.user));
+
+                // Get the redirect path from query params, default to home
+                const from = searchParams.get('from') || '/';
+                console.log('Redirecting to:', from);
+                showToast.success('Sign up successful!');
+                router.push(from);
+            } else {
+                console.error('No token in response:', response);
+                showToast.error(response.message || 'Failed to sign up with Google');
+            }
+        } catch (error: any) {
+            console.error('Google sign up error details:', {
+                message: error.message,
+                response: error.response,
+                stack: error.stack
+            });
+            showToast.error(error.message || 'Failed to sign up with Google');
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        console.error('Google sign up failed');
+        showToast.error('Google sign up failed. Please try again.');
+    };
+
+    return (
+        <section className="relative py-10 px-6 2xl:py-18 -mt-18 lg:h-full flex items-center">
+            <div
+                className="fixed top-0 left-0 w-full h-full object-cover object-center -z-10"
+                style={{
+                    backgroundImage: "url('/bg.jpg')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                }}
+            />
+            <div className=" absolute top-20 left-0 w-full h-fit bg-black/[.5] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="container mx-auto relative h-full"
+                >
+                    <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                        <Link href="/" className="flex justify-center">
+                            <Image
+                                src="/images/logo.svg"
+                                alt="24/7 Medics"
+                                width={150}
+                                height={50}
+                                className="mx-auto"
+                            />
+                        </Link>
+                        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+                            Create your account
+                        </h2>
                     </div>
-                    {errors.firstName && (
-                      <div className="text-red-600 text-xs mt-1">
-                        {errors.firstName}
-                      </div>
-                    )}
-                  </div>
 
-                  <div>
-                    <label
-                      htmlFor="lastName"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Last name
-                    </label>
-                    <div className="mt-1">
-                      <input
-                        id="lastName"
-                        name="lastName"
-                        type="text"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                      />
+                    <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                            <form className="space-y-6" onSubmit={handleSubmit}>
+                                {error && (
+                                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                    <div>
+                                        <label
+                                            htmlFor="firstName"
+                                            className="block text-sm font-medium text-gray-700"
+                                        >
+                                            First name
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                id="firstName"
+                                                name="firstName"
+                                                type="text"
+                                                value={formData.firstName}
+                                                onChange={handleChange}
+                                                className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                            />
+                                        </div>
+                                        {errors.firstName && (
+                                            <div className="text-red-600 text-xs mt-1">
+                                                {errors.firstName}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            htmlFor="lastName"
+                                            className="block text-sm font-medium text-gray-700"
+                                        >
+                                            Last name
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                id="lastName"
+                                                name="lastName"
+                                                type="text"
+                                                value={formData.lastName}
+                                                onChange={handleChange}
+                                                className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                            />
+                                        </div>
+                                        {errors.lastName && (
+                                            <div className="text-red-600 text-xs mt-1">
+                                                {errors.lastName}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="email"
+                                        className="block text-sm font-medium text-gray-700"
+                                    >
+                                        Pronouns
+                                    </label>
+                                    <div className="mt-1">
+                                        <input
+                                            id="pronouns"
+                                            name="pronouns"
+                                            type="pronouns"
+                                            autoComplete="pronouns"
+                                            value={formData.pronouns}
+                                            onChange={handleChange}
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="email"
+                                        className="block text-sm font-medium text-gray-700"
+                                    >
+                                        Email address
+                                    </label>
+                                    <div className="mt-1">
+                                        <input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            autoComplete="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                        />
+                                    </div>
+                                    {errors.email && (
+                                        <div className="text-red-600 text-xs mt-1">
+                                            {errors.email}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="phone"
+                                        className="block text-sm font-medium text-gray-700"
+                                    >
+                                        Phone number
+                                    </label>
+                                    <div className="mt-1">
+                                        <input
+                                            id="phone"
+                                            name="phone"
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                        />
+                                    </div>
+                                    {errors.phone && (
+                                        <div className="text-red-600 text-xs mt-1">
+                                            {errors.phone}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="password"
+                                        className="block text-sm font-medium text-gray-700"
+                                    >
+                                        Password
+                                    </label>
+                                    <div className="relative mt-1">
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? "Hide" : "Show"}
+                                        </button>
+                                    </div>
+                                    {errors.password && (
+                                        <div className="text-red-600 text-xs mt-1">
+                                            {errors.password}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="password"
+                                        className="block text-sm font-medium text-gray-700"
+                                    >
+                                        Confirm Password
+                                    </label>
+                                    <div className="relative mt-1">
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            autoComplete="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowConfirmPassword(!showConfirmPassword)
+                                            }
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? "Hide" : "Show"}
+                                        </button>
+                                    </div>
+                                    {errors.confirmPassword && (
+                                        <p className="text-red-600 !text-xs mt-1">
+                                            {errors.confirmPassword}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoading ? "Creating account..." : "Create account"}
+                                    </button>
+                                </div>
+
+                                <div className="mt-6">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className="w-full border-t border-gray-300" />
+                                        </div>
+                                        <div className="relative flex justify-center text-sm">
+                                            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6">
+                                        {isGoogleLoading ? (
+                                            <div className="flex items-center justify-center w-full h-10 bg-gray-100 rounded-md">
+                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                                            </div>
+                                        ) : (
+                                            <GoogleLogin
+                                                onSuccess={handleGoogleSuccess}
+                                                onError={handleGoogleError}
+                                                useOneTap
+                                                theme="filled_blue"
+                                                shape="rectangular"
+                                                text="signup_with"
+                                                width="100%"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                <p className="mt-2 text-center !text-[14px] text-black">
+                                    Already have an account?{" "}
+                                    <Link
+                                        href="/login"
+                                        className="text-secondary hover:text-primary/80"
+                                    >
+                                        Sign in
+                                    </Link>
+                                </p>
+                            </form>
+                        </div>
                     </div>
-                    {errors.lastName && (
-                      <div className="text-red-600 text-xs mt-1">
-                        {errors.lastName}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Pronouns
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="pronouns"
-                      name="pronouns"
-                      type="pronouns"
-                      autoComplete="pronouns"
-                      value={formData.pronouns}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Email address
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                    />
-                  </div>
-                  {errors.email && (
-                    <div className="text-red-600 text-xs mt-1">
-                      {errors.email}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone number
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                    />
-                  </div>
-                  {errors.phone && (
-                    <div className="text-red-600 text-xs mt-1">
-                      {errors.phone}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Password
-                  </label>
-                  <div className="relative mt-1">
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <div className="text-red-600 text-xs mt-1">
-                      {errors.password}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Confirm Password
-                  </label>
-                  <div className="relative mt-1">
-                    <input
-                      id="password"
-                      name="password"
-                      type={showConfirmPassword ? "text" : "password"}
-                      autoComplete="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500"
-                      tabIndex={-1}
-                    >
-                      {showConfirmPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-red-600 !text-xs mt-1">
-                      {errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? "Creating account..." : "Create account"}
-                  </button>
-                </div>
-              </form>
+                </motion.div>
             </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
+        </section>
+    );
 }

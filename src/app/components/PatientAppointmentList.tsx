@@ -9,11 +9,13 @@ import { MdInfoOutline } from 'react-icons/md';
 import { FaInfoCircle } from 'react-icons/fa';
 import { FaVideo } from 'react-icons/fa';
 import JoinVideoButton from './JoinVideoButton';
+import { FiExternalLink } from 'react-icons/fi';
 
 interface Appointment {
     _id: string;
     status: string;
     createdAt: string;
+    scheduledAt: string;
     email?: string;
     phone?: string;
     paymentStatus?: string;
@@ -88,8 +90,14 @@ export default function PatientAppointmentList() {
 
         const isCompleted = appointment.status === 'completed';
         const matchesTab = activeTab === 'completed' ? isCompleted : !isCompleted;
+        
+        // Add date filter
+        const matchesDate = dateFilter ? 
+            new Date(appointment.scheduledAt).toLocaleDateString() === new Date(dateFilter).toLocaleDateString() 
+            : true;
+        
+        return matchesSearch && matchesTab && matchesDate;
 
-        return matchesSearch && matchesTab;
     });
 
     // Pagination logic
@@ -225,16 +233,17 @@ export default function PatientAppointmentList() {
                                                 <div className="flex items-center">
                                                     <div>
                                                         <div className="font-medium text-gray-900">
-                                                            {appointment.doctorId?.firstName} {appointment.doctorId?.lastName}
+                                                            {appointment.doctorId?.firstName || appointment.doctorId?.lastName
+                                                                ? `${appointment.doctorId?.firstName || ''} ${appointment.doctorId?.lastName || ''}`.trim()
+                                                                : 'N/A'}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm text-gray-900">
-                                                    {appointment.scheduledAt
-                                                        ? new Date(appointment.scheduledAt).toLocaleString()
-                                                        : "N/A"}
+
+                                                    {appointment.scheduledAt ? new Date(appointment.scheduledAt).toLocaleString() : 'Not scheduled'}
 
                                                 </div>
                                             </td>
@@ -255,7 +264,7 @@ export default function PatientAppointmentList() {
                                                         title="View Details"
                                                         onClick={() => router.push(`/appointments/${appointment._id}`)}
                                                     >
-                                                        <FaInfoCircle className="text-xl" />
+                                                        <FiExternalLink className="text-xl" />
                                                     </button>
                                                     {(appointment.status === 'in-progress' || appointment.status === 'confirmed') && (
                                                         <JoinVideoButton

@@ -7,5 +7,6 @@ export const showToast = {
   success: toastSuccess,
   error: (msg: string) => toast.error(msg),
   loading: (msg: string) => toast.loading(msg),
+  warning: (msg: string) => toast(msg, { icon: '⚠️' }),
 };
 

@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AppointmentFormData {
-  age: number;
+  age: number | null;
   isForSelf: boolean;
-  status: string;
   country: string;
   city: string;
+  formattedAddress: string;
   serviceType: string;
   firstName: string;
   lastName: string;
@@ -18,11 +18,11 @@ interface AppointmentFormData {
 }
 
 const initialState: AppointmentFormData = {
-  age: 0,
+  age: null,
   isForSelf: true,
-  status: 'requested',
-  country: 'UK',
+  country: '',
   city: '',
+  formattedAddress: '',
   serviceType: '',
   firstName: '',
   lastName: '',
@@ -30,7 +30,7 @@ const initialState: AppointmentFormData = {
   gender: '',
   email: '',
   visitType: 'urgent-care',
-  appointmentMode: 'Video',
+  appointmentMode: 'video',
   reason: '',
 };
 

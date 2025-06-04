@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useState, useEffect } from 'react';
+import { CardElement, useStripe, useElements, Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { showToast } from '@/utils/toast';
 import { stripeService } from '@/api/services/stripeService';
-
 
 interface PaymentFormProps {
     appointmentId: string;
@@ -13,7 +13,10 @@ interface PaymentFormProps {
     onSuccess: (paymentIntent: any) => void;
 }
 
-export default function PaymentForm({ appointmentId, amount, selectedResponse, onSuccess }: PaymentFormProps) {
+// Initialize Stripe outside component with your test key
+const stripePromise = loadStripe('pk_test_51RQ5GaE7QvXz9EhMVhJUcIdZH0FypuN9yzbVme4FGE8JredZd94X96FeCC6lYn1wu2Eb1Iu9QD463rdynHAnT0XN00YRwGb4Vr');
+
+const PaymentFormInner = ({ appointmentId, amount, selectedResponse, onSuccess }: PaymentFormProps) => {
     const stripe = useStripe();
     const elements = useElements();
     const [name, setName] = useState('');
@@ -24,11 +27,12 @@ export default function PaymentForm({ appointmentId, amount, selectedResponse, o
         event.preventDefault();
 
         if (!stripe || !elements) {
+            showToast.error('Stripe not initialized');
             return;
         }
 
         setIsProcessing(true);
-        // showToast.loading('Processing payment...');
+        showToast.loading('Processing payment...');
 
         try {
             // Create payment intent
@@ -54,7 +58,7 @@ export default function PaymentForm({ appointmentId, amount, selectedResponse, o
                 throw error;
             }
 
-            if (paymentIntent.status === 'succeeded') {
+            if (paymentIntent?.status === 'succeeded') {
                 showToast.success('Payment successful!');
                 onSuccess(paymentIntent);
             }
@@ -132,4 +136,22 @@ export default function PaymentForm({ appointmentId, amount, selectedResponse, o
             </button>
         </form>
     );
-} 
+};
+
+// Wrap your form with Elements provider
+export default function PaymentForm(props: PaymentFormProps) {
+    const [stripeReady, setStripeReady] = useState(false);
+
+    useEffect(() => {
+        // Verify Stripe is loaded
+        stripePromise.then(() => setStripeReady(true));
+    }, []);
+
+    if (!stripeReady) return <div>Loading payment gateway...</div>;
+
+    return (
+        <Elements stripe={stripePromise}>
+            <PaymentFormInner {...props} />
+        </Elements>
+    );
+}

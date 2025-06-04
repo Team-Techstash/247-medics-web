@@ -33,7 +33,8 @@ export default function LoginPage() {
                 // Store token in both cookie and localStorage for compatibility
                 Cookies.set('authToken', response.token, { expires: 7 }); // Expires in 7 days
                 localStorage.setItem("authToken", response.token);
-                
+                localStorage.setItem("user", JSON.stringify(response.user));
+                console.log(response)
                 // Redirect to the original requested page or home
                 const from = searchParams.get('from') || '/';
                 router.push(from);
