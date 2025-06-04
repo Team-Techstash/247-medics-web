@@ -69,11 +69,11 @@ export default function Find() {
         });
         socketRef.current.on("doctorResponded", (data: any) => {
             console.log('New doctor response:', data);
-            showToast.success(`New response from Dr. ${data.doctorId?.firstName} ${data.doctorId?.lastName}`);
+            showToast.success(`New response from Dr. ${data.doctor?.firstName} ${data.doctor?.lastName}`);
             setRespondedDoctors(prev => {
                 // Check if this doctor already responded to avoid duplicates
                 const exists = prev.some(doc =>
-                    doc.doctorId?._id === data.doctorId?._id
+                    doc.doctor?._id === data.doctor?._id
                 );
                 return exists ? prev : [...prev, data];
             });
