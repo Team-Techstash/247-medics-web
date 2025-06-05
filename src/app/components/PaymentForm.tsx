@@ -5,6 +5,7 @@ import { CardElement, useStripe, useElements, Elements } from '@stripe/react-str
 import { loadStripe } from '@stripe/stripe-js';
 import { showToast } from '@/utils/toast';
 import { stripeService } from '@/api/services/stripeService';
+import { toast } from 'react-hot-toast';
 
 interface PaymentFormProps {
     appointmentId: string;
@@ -31,15 +32,22 @@ const PaymentFormInner = ({ appointmentId, amount, selectedResponse, onSuccess }
             return;
         }
 
-        setIsProcessing(true);
-        showToast.loading('Processing payment...');
+        if (!selectedResponse.doctor?._id) {
+            console.error('Doctor information missing in selectedResponse:', selectedResponse);
+            showToast.error('Doctor information is missing');
+            return;
+        }
 
+        let loadingToastId: string | undefined;
         try {
+            setIsProcessing(true);
+            loadingToastId = showToast.loading('Processing payment...');
+    
             // Create payment intent
             const { clientSecret } = await stripeService.createPaymentIntent({
                 appointmentId,
                 amount,
-                doctorId: selectedResponse.doctorId._id,
+                doctorId: selectedResponse.doctor._id,
             });
 
             // Confirm payment
@@ -54,16 +62,21 @@ const PaymentFormInner = ({ appointmentId, amount, selectedResponse, onSuccess }
             });
 
             if (error) {
+                toast.dismiss(loadingToastId);
                 showToast.error(error.message || 'Payment failed');
                 throw error;
             }
 
             if (paymentIntent?.status === 'succeeded') {
+                toast.dismiss(loadingToastId);
                 showToast.success('Payment successful!');
                 onSuccess(paymentIntent);
             }
         } catch (error: any) {
             console.error('Payment error:', error);
+            if (loadingToastId) {
+                toast.dismiss(loadingToastId);
+            }
             showToast.error(error.message || 'Payment failed');
         } finally {
             setIsProcessing(false);

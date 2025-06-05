@@ -41,7 +41,7 @@ export default function PaymentPage() {
                                 Complete Your Payment
                             </h2>
                             <div className="mt-4 text-gray-500">
-                                <p className='!text-[16px]'>Doctor: <strong className='text-primary'> {selectedResponse.doctorId.firstName} {selectedResponse.doctorId.lastName}</strong></p>
+                                <p className='!text-[16px]'>Doctor: <strong className='text-primary'> {selectedResponse.doctor.firstName} {selectedResponse.doctor.lastName}</strong></p>
                                 <p className='!text-[16px]'>
                                     Appointment Time: <strong className="text-primary">
                                         {new Date(selectedResponse.dateTime).toLocaleString('en-US', {

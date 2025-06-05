@@ -7,6 +7,14 @@ import Footer from "@/app/components/Footer";
 import { useRouter } from "next/navigation";
 import { NextPage } from "next";
 import { use } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { 
+  fetchReferences, 
+  selectServiceTypes,
+  selectAppointmentModes,
+  selectReferencesLoading 
+} from "@/redux/slices/referenceSlice";
 
 interface AppointmentDetailPageProps {
   params: Promise<{ id: string }>;
@@ -16,10 +24,20 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
   params,
 }) => {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const [appointment, setAppointment] = useState<any>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const resolvedParams = use(params);
+
+  // Get reference data from Redux
+  const serviceTypes = useSelector(selectServiceTypes);
+  const appointmentModes = useSelector(selectAppointmentModes);
+  const referencesLoading = useSelector(selectReferencesLoading);
+
+  useEffect(() => {
+    dispatch(fetchReferences());
+  }, [dispatch]);
 
   useEffect(() => {
     const fetchAppointmentDetails = async () => {
@@ -50,6 +68,12 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
 
     fetchAppointmentDetails();
   }, [resolvedParams.id]);
+
+  // Helper function to get reference name by code
+  const getReferenceName = (code: string, referenceData: { [key: string]: any }) => {
+    const item = Object.values(referenceData).find(item => item.code === code);
+    return item ? item.name : code;
+  };
 
   if (error === "Please login to view appointment details") {
     return (
@@ -150,7 +174,7 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
                     Service Type
                   </div>
                   <div className="font-bold text-gray-800">
-                    {appointment.serviceType}
+                    {getReferenceName(appointment.serviceType, serviceTypes)}
                   </div>
                 </div>
                 {/* Appointment Mode */}
@@ -159,7 +183,7 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
                     Appointment Mode
                   </div>
                   <div className="font-bold text-gray-800">
-                    {appointment.appointmentMode}
+                    {getReferenceName(appointment.appointmentMode, appointmentModes)}
                   </div>
                 </div>
                 {/* Payment Status */}

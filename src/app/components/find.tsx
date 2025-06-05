@@ -30,9 +30,15 @@ export default function Find() {
                     const response = await appointmentsService.getAppointmentById(appointmentId);
                     if (response.success) {
                         setAppointment(response.data);
-                        console.log(response)
-                        setRespondedDoctors(response.data.respondedDoctors)
-
+                        console.log(response);
+                        // Normalize the responded doctors data
+                        const normalizedDoctors = response.data.respondedDoctors.map((doctor: any) => ({
+                            ...doctor,
+                            doctor: doctor.doctor || doctor.doctorId,
+                        }));
+                        // Remove doctorId from each response
+                        normalizedDoctors.forEach((doctor: any) => delete doctor.doctorId);
+                        setRespondedDoctors(normalizedDoctors);
                     } else {
                         console.error("Failed to fetch appointment", response.message);
                     }
@@ -72,13 +78,20 @@ export default function Find() {
         });
         socketRef.current.on("doctorResponded", (data: any) => {
             console.log('New doctor response:', data);
-            showToast.success(`New response from Dr. ${data.doctor?.firstName} ${data.doctor?.lastName}`);
+            // Normalize the doctor data structure
+            const normalizedData = {
+                ...data,
+                doctor: data.doctor || data.doctorId,
+            };
+            delete normalizedData.doctorId;
+
+            showToast.success(`New response from Dr. ${normalizedData.doctor?.firstName} ${normalizedData.doctor?.lastName}`);
             setRespondedDoctors(prev => {
                 // Check if this doctor already responded to avoid duplicates
                 const exists = prev.some(doc =>
-                    doc.doctor?._id === data.doctor?._id
+                    doc.doctor?._id === normalizedData.doctor?._id
                 );
-                return exists ? prev : [...prev, data];
+                return exists ? prev : [...prev, normalizedData];
             });
         });
         socketRef.current.on("disconnect", () => {
@@ -101,10 +114,32 @@ export default function Find() {
             showToast.error('Please select a doctor response first');
             return;
         }
+
+        // Normalize the doctor data structure
+        const response = {
+            ...selectedResponse,
+            doctor: selectedResponse.doctor || selectedResponse.doctorId,
+        };
+        delete response.doctorId;
+
         router.push(`/payment?appointmentId=${appointmentId}`);
+        localStorage.setItem('selectedResponse', JSON.stringify(response));
+    };
 
-        localStorage.setItem('selectedResponse', JSON.stringify(selectedResponse));
+    // Add a function to normalize doctor data
+    const normalizeDoctorData = (data: any) => {
+        if (!data) return data;
+        const normalized = {
+            ...data,
+            doctor: data.doctor || data.doctorId,
+        };
+        delete normalized.doctorId;
+        return normalized;
+    };
 
+    // Modify the setSelectedResponse to use normalized data
+    const handleSelectResponse = (item: any) => {
+        setSelectedResponse(normalizeDoctorData(item));
     };
 
     return (
@@ -135,7 +170,7 @@ export default function Find() {
                                             ? 'bg-[#faf8fc] ring-1 ring-[#9904A1]'
                                             : 'bg-white hover:bg-gray-50 shadow-md'
                                             }`}
-                                        onClick={() => setSelectedResponse(item)}
+                                        onClick={() => handleSelectResponse(item)}
                                     >
                                         <h3 className="font-medium text-[#9904A1] text-md">
                                             Dr. {item.doctor?.firstName} {item.doctor?.lastName}
