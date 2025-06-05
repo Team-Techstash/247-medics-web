@@ -7,14 +7,17 @@ import Link from "next/link";
 import { appointmentsService } from "@/api/services/service";
 import { showToast } from "@/utils/toast";
 import MainLayout from "../layouts/MainLayout";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { fetchReferences, selectServiceTypes } from "@/redux/slices/referenceSlice";
 
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { io, Socket } from "socket.io-client";
 
-
 export default function Find() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const dispatch = useDispatch<AppDispatch>();
     const appointmentId = searchParams.get("id");
     const socketRef = useRef<Socket | null>(null);
 
@@ -22,6 +25,19 @@ export default function Find() {
     const [respondedDoctors, setRespondedDoctors] = useState<any[]>([]);
     const [selectedResponse, setSelectedResponse] = useState<any>(null);
     const [isConnected, setIsConnected] = useState(false);
+
+    const serviceTypes = useSelector(selectServiceTypes);
+
+    useEffect(() => {
+        dispatch(fetchReferences());
+    }, [dispatch]);
+
+    // Helper function to get service type name
+    const getServiceTypeName = (code: string) => {
+        if (!code || !serviceTypes) return 'N/A';
+        const service = Object.values(serviceTypes).find(item => item.code === code);
+        return service ? service.name : code;
+    };
 
     useEffect(() => {
         if (appointmentId) {
@@ -31,12 +47,10 @@ export default function Find() {
                     if (response.success) {
                         setAppointment(response.data);
                         console.log(response);
-                        // Normalize the responded doctors data
                         const normalizedDoctors = response.data.respondedDoctors.map((doctor: any) => ({
                             ...doctor,
                             doctor: doctor.doctor || doctor.doctorId,
                         }));
-                        // Remove doctorId from each response
                         normalizedDoctors.forEach((doctor: any) => delete doctor.doctorId);
                         setRespondedDoctors(normalizedDoctors);
                     } else {
@@ -209,7 +223,7 @@ export default function Find() {
                                                 <p className="text-gray-700"><span className="font-medium">Date & Time:</span> {selectedResponse.dateTime
                                                     ? new Date(selectedResponse.dateTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
                                                     : 'N/A'}</p>
-                                                <p className="text-gray-700"><span className="font-medium">Service Type:</span> {appointment?.serviceType || 'N/A'}</p>
+                                                <p className="text-gray-700"><span className="font-medium">Service Type:</span> {getServiceTypeName(appointment?.serviceType)}</p>
                                                 <p className="text-gray-700"><span className="font-medium">Location:</span> {appointment?.city}, {appointment?.country}</p>
                                                 <p className="text-gray-700"><span className="font-medium">Notes:</span> {selectedResponse.notes || 'No additional notes provided.'}</p>
                                             </div>
