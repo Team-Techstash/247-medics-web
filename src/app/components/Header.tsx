@@ -55,16 +55,16 @@ const Header = () => {
 
     const handleSeeDoctorClick = (e: React.MouseEvent) => {
         if (authToken) {
-            const userStr = localStorage.getItem('user');
-            if (userStr) {
-                const user = JSON.parse(userStr);
-                if (!user.isProfileComplete) {
-                    e.preventDefault();
-                    router.push('/profile');
-                    showToast.warning('Please complete your profile first');
-                    return;
-                }
-            }
+            // const userStr = localStorage.getItem('user');
+            // if (userStr) {
+            //     const user = JSON.parse(userStr);
+            //     if (!user.isProfileComplete) {
+            //         e.preventDefault();
+            //         router.push('/profile');
+            //         showToast.warning('Please complete your profile first');
+            //         return;
+            //     }
+            // }
         }
     };
 
