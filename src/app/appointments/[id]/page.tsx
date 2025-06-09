@@ -219,7 +219,7 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
                     Appointment Time
                   </div>
                   <div className="font-bold text-gray-800">
-                    {new Date(appointment.scheduledAt).toLocaleString()}
+                    {appointment.scheduledAt ? new Date(appointment.scheduledAt).toLocaleString() : "Not Scheduled"}
                   </div>
                 </div>
                 {/* Reason (full width) */}
