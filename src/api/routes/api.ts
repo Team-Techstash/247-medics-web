@@ -28,3 +28,8 @@ export const APPOINTMENTS_ROUTES = {
 export const REFERENCE_ROUTES = {
     GET_REFERENCES: 'users/references',
 } as const; 
+
+export const DOCTOR_ROUTES = {
+    CHECK_STRIPE_ONBOARDING: 'users/check-stripe-onboarding',
+    ONBOARDING_SETUP: 'users/doctor-onboarding-link',
+} as const; 
