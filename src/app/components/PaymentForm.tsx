@@ -15,7 +15,7 @@ interface PaymentFormProps {
 }
 
 // Initialize Stripe outside component with your test key
-const stripePromise = loadStripe('pk_test_51RQ5GaE7QvXz9EhMVhJUcIdZH0FypuN9yzbVme4FGE8JredZd94X96FeCC6lYn1wu2Eb1Iu9QD463rdynHAnT0XN00YRwGb4Vr');
+const stripePromise = loadStripe('pk_test_51RX0W3ChbmE7QdjywERYiSLUpmzZSEp6LTxSwHfhjdkWMmRzlffLZfdbPRNrY1QQ6G0sgED8GWrKhdDDYZ48lHxI00Zs0YRxOe');
 
 const PaymentFormInner = ({ appointmentId, amount, selectedResponse, onSuccess }: PaymentFormProps) => {
     const stripe = useStripe();
