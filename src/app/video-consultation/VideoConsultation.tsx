@@ -24,13 +24,11 @@ interface AgoraCredentials {
 }
 
 interface VideoConsultationProps {
-  appointmentId: string;
-  token: string;
+  meetingCode: string;
 }
 
 const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
-  appointmentId,
-  token,
+  meetingCode,
 }) => {
   const router = useRouter();
   const [permissionsGranted, setPermissionsGranted] = useState<boolean | null>(null);
@@ -87,11 +85,10 @@ const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${API_CONFIG.BASE_URL}/appointments/join/${appointmentId}`,
+          `${API_CONFIG.BASE_URL}/appointments/join-meeting/${meetingCode}`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
@@ -115,7 +112,7 @@ const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
     };
 
     fetchCredentials();
-  }, [permissionsGranted, appointmentId, token, agoraRTC]);
+  }, [permissionsGranted, meetingCode, agoraRTC]);
 
   // Step 3: Start Agora client only if credentials exist
   useEffect(() => {
