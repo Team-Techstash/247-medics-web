@@ -112,7 +112,7 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
         <div className="flex justify-center mb-6">
           <button
             onClick={() => router.push("/appointments")}
-            className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-6 py-2 rounded-full shadow transition-colors duration-200"
+            className="text-secondary hover:text-primary font-semibold px-6 py-2 transition-colors duration-200"
           >
             &larr; Back to Appointment List
           </button>
@@ -191,8 +191,18 @@ const AppointmentDetailPage: NextPage<AppointmentDetailPageProps> = ({
                   <div className="text-xs text-gray-500 font-semibold">
                     Payment Status
                   </div>
-                  <div className="font-bold text-gray-800 capitalize">
+                  <div className="font-bold text-gray-800 capitalize flex items-center gap-2">
                     {appointment.paymentStatus}
+                    {appointment.paymentStatus === "paid" && appointment.paymentDetails.receiptUrl && (
+                      <a
+                        href={appointment.paymentDetails.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 text-secondary hover:text-primary transition cursor-pointer"
+                      >
+                        (View Receipt)
+                      </a>
+                    )}
                   </div>
                 </div>
                 {/* Visit Type */}

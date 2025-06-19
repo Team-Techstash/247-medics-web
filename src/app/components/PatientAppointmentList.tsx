@@ -19,6 +19,7 @@ interface Appointment {
     email?: string;
     phone?: string;
     paymentStatus?: string;
+    reviewId?: string;
     doctorId?: {
         firstName: string;
         lastName: string;
@@ -65,6 +66,7 @@ export default function PatientAppointmentList() {
                 lastName: item.patientId?.lastName || '',
                 phone: item.patientId?.phone || '',
                 status: item.status,
+                reviewId: item?.reviewId,
                 paymentStatus: item.paymentStatus || 'pending',
                 createdAt: item.createdAt,
                 scheduledAt: item.scheduledAt,
@@ -277,6 +279,14 @@ export default function PatientAppointmentList() {
                                                         <button onClick={() => router.push(`/find?id=${appointment._id}`) }
                                                             className="text-pink-500 hover:text-[#9904A1] px-3 py-1.5 border border-pink-500 rounded-full hover:bg-[#4A154D] hover:border-[#4A154D] hover:text-white transition-colors text-sm">
                                                             View Doctors Response
+                                                        </button>
+                                                    )}
+                                                    {appointment.status === 'completed' && !appointment.reviewId && (
+                                                        <button 
+                                                            onClick={() => router.push(`/appointments/${appointment._id}/review`)}
+                                                            className="text-pink-500 hover:text-[#9904A1] px-3 py-1.5 border border-pink-500 rounded-full hover:bg-[#4A154D] hover:border-[#4A154D] hover:text-white transition-colors text-sm"
+                                                        >
+                                                            Write Review
                                                         </button>
                                                     )}
                                                 </div>

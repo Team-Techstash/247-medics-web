@@ -2,6 +2,8 @@
 export interface Address {
     streetAddress1: string;
     city: string;
+    countryCode: string;
+    countryName: string;
 }
 
 interface EmergencyContact {

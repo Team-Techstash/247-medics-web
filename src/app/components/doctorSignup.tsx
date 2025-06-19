@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { authService } from "@/api/services/service";
+import { authService, countryService } from "@/api/services/service";
 import {
     RegisterFormData,
     RegisterFormErrors,
@@ -18,6 +18,12 @@ type DoctorSignUp = {
     onSubmit: (formData: any) => void;
     isLoading?: boolean;
 };
+
+interface Country {
+    countryCode: string;
+    countryName: string;
+}
+
 export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -25,6 +31,9 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
+    const [selectedCountry, setSelectedCountry] = useState("");
+    const [countryCode, setCountryCode] = useState("+");
+    const [localNumber, setLocalNumber] = useState("");
     const [formData, setFormData] = useState<RegisterFormData>({
         firstName: "",
         lastName: "",
@@ -36,7 +45,8 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
         address: {
             streetAddress1: "",
             city: "",
-            country: ""
+            countryCode: "",
+            countryName: ""
         },
         gender: "",
         age: 0,
@@ -58,6 +68,30 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
     const [errors, setErrors] = useState<RegisterFormErrors>({});
     const [error, setError] = useState("");
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [countries, setCountries] = useState<Country[]>([]);
+    const [cities, setCities] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (formData.phone) {
+            const match = formData.phone.match(/^(\+\d{1,4})(\d{4,})$/);
+            if (match) {
+                setCountryCode(match[1]);
+                setLocalNumber(match[2]);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        countryService.getCountries()
+            .then(response => {
+                console.log('Countries API response:', response);
+                setCountries(response.data);
+            })
+            .catch(err => {
+                console.error('Failed to fetch countries:', err);
+                setCountries([]);
+            });
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -74,113 +108,162 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
         }
     };
 
-    const validateStep = () => {
-        const newErrors: RegisterFormErrors = {};
-        let isValid = true;
+    const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const countryCode = e.target.value;
+        const selectedCountry = countries.find((c: Country) => c.countryCode === countryCode);
+        console.log("Selected country:", selectedCountry);
+        setSelectedCountry(countryCode);
+        setFormData(prev => {
+            const updatedData = {
+                ...prev,
+                address: {
+                    ...prev.address,
+                    countryCode: countryCode,
+                    countryName: selectedCountry?.countryName || "",
+                    city: ""
+                }
+            };
+            return updatedData;
+        });
+        // Fetch cities for the selected country
+        if (countryCode) {
+            countryService.getCities("te", countryCode)
+                .then(response => {
+                    console.log('Cities API response:', response.data[0].cities);
+                    setCities(response.data[0].cities || []);
+                })
+                .catch(err => {
+                    console.error('Failed to fetch cities:', err);
+                    setCities([]);
+                });
+        } else {
+            setCities([]);
+        }
+    };
 
+    const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setFormData(prev => ({
+            ...prev,
+            address: {
+                ...prev.address,
+                city: e.target.value
+            }
+        }));
+    };
+
+    const handleCountryCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let val = e.target.value.replace(/[^0-9+]/g, '');
+        if (!val.startsWith('+')) val = '+' + val;
+        setCountryCode(val);
+        setFormData(prev => ({
+            ...prev,
+            phone: `${val}${localNumber.replace(/\s/g, '')}`
+        }));
+    };
+
+    const handleLocalNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value.replace(/[^0-9 ]/g, '');
+        setLocalNumber(val);
+        setFormData(prev => ({
+            ...prev,
+            phone: `${countryCode}${val.replace(/\s/g, '')}`
+        }));
+    };
+
+    const validateStep = () => {
+        const newErrors: any = {};
         if (currentStep === 1) {
             if (!formData.firstName.trim()) {
                 newErrors.firstName = "First name is required";
-                isValid = false;
             }
             if (!formData.lastName.trim()) {
                 newErrors.lastName = "Last name is required";
-                isValid = false;
             }
             if (!formData.email.trim()) {
                 newErrors.email = "Email is required";
-                isValid = false;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-                newErrors.email = "Please enter a valid email address";
-                isValid = false;
+            } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+                newErrors.email = "Email is invalid";
             }
             if (!formData.phone.trim()) {
                 newErrors.phone = "Phone number is required";
-                isValid = false;
-            }
-            if (!formData.password) {
-                newErrors.password = "Password is required";
-                isValid = false;
-            } else if (formData.password.length < 6) {
-                newErrors.password = "Password must be at least 6 characters long";
-                isValid = false;
-            }
-            if (!confirmPassword.trim()) {
-                newErrors.confirmPassword = "Confirm Password is required";
-                isValid = false;
-            }
-            if (confirmPassword !== formData.password) {
-                newErrors.confirmPassword = "Passwords do not match";
-                isValid = false;
+            } else if (!formData.phone.startsWith('+')) {
+                newErrors.phone = "Phone number must include country code";
             }
             if (!formData.address.streetAddress1.trim()) {
                 newErrors.streetAddress1 = "Street address is required";
-                isValid = false;
+            }
+            if (!formData.address.countryCode) {
+                newErrors.country = "Country is required";
             }
             if (!formData.address.city.trim()) {
                 newErrors.city = "City is required";
-                isValid = false;
-            }
-            if (!formData.address.country.trim()) {
-                newErrors.country = "Country is required";
-                isValid = false;
             }
             if (!formData.gender) {
                 newErrors.gender = "Gender is required";
-                isValid = false;
             }
             if (!formData.age) {
                 newErrors.age = "Age is required";
-                isValid = false;
+            } else if (formData.age < 18) {
+                newErrors.age = "You must be at least 18 years old";
+            }
+            if (!formData.password) {
+                newErrors.password = "Password is required";
+            } else if (formData.password.length < 6) {
+                newErrors.password = "Password must be at least 6 characters";
+            }
+            if (!confirmPassword) {
+                newErrors.confirmPassword = "Please confirm your password";
+            } else if (formData.password !== confirmPassword) {
+                newErrors.confirmPassword = "Passwords do not match";
+            }
+
+            // Country code validation
+            if (!countryCode || !/^\+\d{1,4}$/.test(countryCode)) {
+                newErrors.phone = "Enter a valid country code (e.g., +1, +44, +971)";
+            }
+
+            // Phone number (local part) validation
+            if (!localNumber || !/^\d{4,15}$/.test(localNumber.replace(/\s/g, ""))) {
+                newErrors.phone = "Enter a valid phone number (4-15 digits, numbers only)";
             }
         } else if (currentStep === 2) {
-            if (!formData.docProfile.emergencyContact.email.trim()) {
-                newErrors.emergencyContactEmail = "Emergency contact email is required";
-                isValid = false;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.docProfile.emergencyContact.email)) {
-                newErrors.emergencyContactEmail = "Please enter a valid email address";
-                isValid = false;
-            }
-            if (!formData.docProfile.emergencyContact.relation.trim()) {
-                newErrors.emergencyContactRelation = "Relation is required";
-                isValid = false;
-            }
             if (!formData.docProfile.emergencyContact.fullName.trim()) {
-                newErrors.emergencyContactFullName = "Full name is required";
-                isValid = false;
+                newErrors.emergencyContactFullName = "Emergency contact name is required";
             }
             if (!formData.docProfile.emergencyContact.phone.trim()) {
-                newErrors.emergencyContactPhone = "Phone number is required";
-                isValid = false;
+                newErrors.emergencyContactPhone = "Emergency contact phone is required";
+            }
+            if (!formData.docProfile.emergencyContact.email.trim()) {
+                newErrors.emergencyContactEmail = "Emergency contact email is required";
+            } else if (!/\S+@\S+\.\S+/.test(formData.docProfile.emergencyContact.email)) {
+                newErrors.emergencyContactEmail = "Emergency contact email is invalid";
+            }
+            if (!formData.docProfile.emergencyContact.relation.trim()) {
+                newErrors.emergencyContactRelation = "Emergency contact relation is required";
             }
         } else if (currentStep === 3) {
             if (!formData.docProfile.regulatoryDetails.authorityName.trim()) {
                 newErrors.authorityName = "Authority name is required";
-                isValid = false;
             }
             if (!formData.docProfile.regulatoryDetails.registrationNumber.trim()) {
                 newErrors.registrationNumber = "Registration number is required";
-                isValid = false;
             }
         }
-
         setErrors(newErrors);
-        return isValid;
+        return Object.keys(newErrors).length === 0;
     };
 
-    const handleNext = () => {
-        if (validateStep()) {
-            setCurrentStep(prev => prev + 1);
-        }
-    };
-
-    const handlePrev = () => {
-        setCurrentStep(prev => prev - 1);
+    const handleNext = (e: React.FormEvent) => {
+        e.preventDefault();
+        const isValid = validateStep();
+        if (!isValid) return;
+        setCurrentStep(prev => prev + 1);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!validateStep()) return;
+        const isValid = validateStep();
+        if (!isValid) return;
         if (Object.keys(errors).length !== 0) {
             return;
         }
@@ -276,7 +359,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
 
                     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                            <form className="space-y-6" onSubmit={handleSubmit}>
+                            <form className="space-y-6" onSubmit={currentStep === 3 ? handleSubmit : handleNext}>
                                 {error && (
                                     <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
                                         {error}
@@ -300,7 +383,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                         type="text"
                                                         value={formData.firstName}
                                                         onChange={handleChange}
-                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                     />
                                                 </div>
                                                 {errors.firstName && (
@@ -324,7 +407,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                         type="text"
                                                         value={formData.lastName}
                                                         onChange={handleChange}
-                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                     />
                                                 </div>
                                                 {errors.lastName && (
@@ -350,7 +433,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                     autoComplete="pronouns"
                                                     value={formData.pronouns}
                                                     onChange={handleChange}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                         </div>
@@ -370,7 +453,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                     autoComplete="email"
                                                     value={formData.email}
                                                     onChange={handleChange}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.email && (
@@ -381,20 +464,26 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                         </div>
 
                                         <div>
-                                            <label
-                                                htmlFor="phone"
-                                                className="block text-sm font-medium text-gray-700"
-                                            >
+                                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
                                                 Phone number
                                             </label>
-                                            <div className="mt-1">
+                                            <div className="flex items-center gap-2 mt-1">
                                                 <input
-                                                    id="phone"
-                                                    name="phone"
-                                                    type="tel"
-                                                    value={formData.phone}
-                                                    onChange={handleChange}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    type="text"
+                                                    maxLength={5}
+                                                    value={countryCode}
+                                                    onChange={handleCountryCodeChange}
+                                                    className="w-16 border border-primary rounded-l-md px-2 py-2 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
+                                                    placeholder="+65"
+                                                    autoComplete="off"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={localNumber}
+                                                    onChange={handleLocalNumberChange}
+                                                    className="flex-1 border border-primary rounded-r-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
+                                                    placeholder="9123 4567"
+                                                    autoComplete="off"
                                                 />
                                             </div>
                                             {errors.phone && (
@@ -424,7 +513,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             streetAddress1: e.target.value
                                                         }
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.streetAddress1 && (
@@ -437,60 +526,60 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                             <div>
                                                 <label
-                                                    htmlFor="city"
-                                                    className="block text-sm font-medium text-gray-700"
-                                                >
-                                                    City
-                                                </label>
-                                                <div className="mt-1">
-                                                    <input
-                                                        id="city"
-                                                        name="address.city"
-                                                        type="text"
-                                                        value={formData.address.city}
-                                                        onChange={(e) => setFormData(prev => ({
-                                                            ...prev,
-                                                            address: {
-                                                                ...prev.address,
-                                                                city: e.target.value
-                                                            }
-                                                        }))}
-                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                                                    />
-                                                </div>
-                                                {errors.city && (
-                                                    <div className="text-red-600 text-xs mt-1">
-                                                        {errors.city}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div>
-                                                <label
                                                     htmlFor="country"
                                                     className="block text-sm font-medium text-gray-700"
                                                 >
                                                     Country
                                                 </label>
                                                 <div className="mt-1">
-                                                    <input
+                                                    <select
                                                         id="country"
-                                                        name="address.country"
-                                                        type="text"
-                                                        value={formData.address.country}
-                                                        onChange={(e) => setFormData(prev => ({
-                                                            ...prev,
-                                                            address: {
-                                                                ...prev.address,
-                                                                country: e.target.value
-                                                            }
-                                                        }))}
-                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
-                                                    />
+                                                        name="country"
+                                                        value={selectedCountry}
+                                                        onChange={handleCountryChange}
+                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
+                                                    >
+                                                        <option value="">Select Country</option>
+                                                        {countries.map((country: Country) => (
+                                                            <option key={country.countryCode} value={country.countryCode}>
+                                                                {country.countryName}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                 </div>
                                                 {errors.country && (
                                                     <div className="text-red-600 text-xs mt-1">
                                                         {errors.country}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label
+                                                    htmlFor="city"
+                                                    className="block text-sm font-medium text-gray-700"
+                                                >
+                                                    City
+                                                </label>
+                                                <div className="mt-1">
+                                                    <select
+                                                        id="city"
+                                                        name="city"
+                                                        value={formData.address.city}
+                                                        onChange={handleCityChange}
+                                                        disabled={!selectedCountry}
+                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700"
+                                                    >
+                                                        <option value="">Select City</option>
+                                                        {cities.map((city, index) => (
+                                                            <option key={index} value={city}>
+                                                                {city}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                {errors.city && (
+                                                    <div className="text-red-600 text-xs mt-1">
+                                                        {errors.city}
                                                     </div>
                                                 )}
                                             </div>
@@ -514,7 +603,8 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                         ...prev,
                                                         age: parseInt(e.target.value) || 0
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    onWheel={(e) => e.currentTarget.blur()}
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.age && (
@@ -540,7 +630,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                         ...prev,
                                                         gender: e.target.value
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 >
                                                     <option value="">Select Gender</option>
                                                     <option value="male">Male</option>
@@ -569,7 +659,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                     type={showPassword ? "text" : "password"}
                                                     value={formData.password}
                                                     onChange={handleChange}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                                 <button
                                                     type="button"
@@ -602,7 +692,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                     autoComplete="password"
                                                     value={confirmPassword}
                                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                                 <button
                                                     type="button"
@@ -625,7 +715,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                 ) : currentStep === 2 ? (
                                     <>
                                         <h3 className="text-lg font-semibold text-gray-900 mb-6">Emergency Contact Details</h3>
-                                        
+
                                         <div>
                                             <label
                                                 htmlFor="emergencyContactFullName"
@@ -649,7 +739,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.emergencyContactFullName && (
@@ -682,7 +772,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.emergencyContactEmail && (
@@ -715,7 +805,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.emergencyContactPhone && (
@@ -748,7 +838,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.emergencyContactRelation && (
@@ -761,7 +851,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                 ) : (
                                     <>
                                         <h3 className="text-lg font-semibold text-gray-900 mb-6">Regulatory Authority/Body Details</h3>
-                                        
+
                                         <div>
                                             <label
                                                 htmlFor="authorityName"
@@ -785,7 +875,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.authorityName && (
@@ -818,7 +908,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1]"
+                                                    className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
                                                 />
                                             </div>
                                             {errors.registrationNumber && (
@@ -829,7 +919,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                         </div>
 
                                         <div className="mt-4">
-                                            <div className="flex items-center">
+                                            <div className="grid grid-cols-[auto_1fr] gap-0">
                                                 <input
                                                     id="onSpecialistRegister"
                                                     name="docProfile.regulatoryDetails.onSpecialistRegister"
@@ -845,16 +935,16 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="h-4 w-4 text-secondary focus:ring-secondary border-gray-300 rounded"
+                                                    className="h-4 w-4 mt-1 text-primary focus:ring-primary border-gray-300 rounded"
                                                 />
                                                 <label htmlFor="onSpecialistRegister" className="ml-2 block text-sm text-gray-900">
-                                                    Are You On The Specialist / GP Register?
+                                                    I am on the Specialist / GP Register
                                                 </label>
                                             </div>
                                         </div>
 
                                         <div className="mt-4">
-                                            <div className="flex items-center">
+                                            <div className="grid grid-cols-[auto_1fr] gap-0">
                                                 <input
                                                     id="allowStatusVerification"
                                                     name="docProfile.regulatoryDetails.allowStatusVerification"
@@ -870,10 +960,10 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                             }
                                                         }
                                                     }))}
-                                                    className="h-4 w-4 text-secondary focus:ring-secondary border-gray-300 rounded"
+                                                    className="h-4 w-4 mt-1 text-primary focus:ring-primary border-gray-300 rounded"
                                                 />
                                                 <label htmlFor="allowStatusVerification" className="ml-2 block text-sm text-gray-900">
-                                                    Are You Happy For 24/7 Medics To Check Your Online Register Status?
+                                                    I am happy for 24/7 Medics to check my online register status
                                                 </label>
                                             </div>
                                         </div>
@@ -884,29 +974,18 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                     {currentStep > 1 && (
                                         <button
                                             type="button"
-                                            onClick={handlePrev}
-                                            className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                                            onClick={() => setCurrentStep(prev => prev - 1)}
+                                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                                         >
-                                            Previous
+                                            Back
                                         </button>
                                     )}
-                                    {currentStep < 3 ? (
-                                        <button
-                                            type="button"
-                                            onClick={handleNext}
-                                            className="ml-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary"
-                                        >
-                                            Next
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="submit"
-                                            disabled={isLoading}
-                                            className="ml-auto py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-secondary hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isLoading ? "Creating account..." : "Create account"}
-                                        </button>
-                                    )}
+                                    <button
+                                        type="submit"
+                                        className="inline-flex ml-auto justify-end py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                                    >
+                                        {currentStep === 3 ? "Create Account" : "Next"}
+                                    </button>
                                 </div>
 
                                 {/* <div className="mt-6">

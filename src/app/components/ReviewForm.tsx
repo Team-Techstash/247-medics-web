@@ -30,6 +30,11 @@ export default function ReviewForm({ onSubmit, isLoading }: ReviewFormProps) {
             isValid = false;
         }
 
+        if (!comment.trim()) {
+            newErrors.comment = 'Please write your review';
+            isValid = false;
+        }
+
         setErrors(newErrors);
         return isValid;
     };
@@ -44,20 +49,21 @@ export default function ReviewForm({ onSubmit, isLoading }: ReviewFormProps) {
     return (
         <form onSubmit={handleSubmit} className="w-full mt-4 flex flex-col items-center gap-6">
             <div className="w-full text-center">
-                <label className="block text-2xl font-bold text-gray-900 mb-1">Feedback Us</label>
-                <div className="flex justify-center mb-6">
+                <div className="flex justify-center mt-10">
                     <button
+                        type="button"
                         onClick={() => router.push("/appointments")}
-                        className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-6 py-2 rounded-full shadow transition-colors duration-200"
-                    >
+                        className="text-secondary hover:text-primary font-semibold px-6 py-2 transition-colors duration-200"
+                        >
                         &larr; Back to Appointment List
                     </button>
                 </div>
             </div>
             <div className='w-full max-w-xl mx-auto bg-white rounded-2xl shadow-md px-6 py-8'>
-                <p className="text-gray-500 text-center text-sm mb-4">How was your experience with your doctor and this appointment? Your feedback helps us improve our care.</p>
+                <label className="block text-center text-2xl font-bold text-gray-900 mb-1">Write a Review</label>
+                <p className="text-gray-500 text-center text-sm mb-4">How was your experience with your doctor? Your feedback helps us improve our care.</p>
                 <div className="flex flex-col items-center w-full gap-2 ">
-                    <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-2">
+                    <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-full px-4 py-2 ">
                         {[...Array(5)].map((_, index) => {
                             const ratingValue = index + 1;
                             return (
@@ -94,6 +100,9 @@ export default function ReviewForm({ onSubmit, isLoading }: ReviewFormProps) {
                         className="block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-base resize-none"
                         placeholder="Type here..."
                     />
+                    {errors.comment && (
+                        <p className="text-red-500 !text-sm mt-1">{errors.comment}</p>
+                    )}
                 </div>
                 <button
                     type="submit"
