@@ -10,10 +10,13 @@ const Footer: React.FC = () => {
 
     // Hide header on the registration page
     if (pathname === "/registration") return null;
+    if (pathname === "/create-appointment") return null;
+    if (pathname === "/login") return null;
+    if (pathname === "/signup") return null;
 
     // Function to scroll to top
     const handleScrollToTop = (): void => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        // window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     return (

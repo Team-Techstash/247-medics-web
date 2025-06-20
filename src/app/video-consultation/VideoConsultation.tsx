@@ -1,0 +1,280 @@
+"use client";
+
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import dynamic from 'next/dynamic';
+import "./VideoConsultation.css";
+import { API_CONFIG } from '@/config/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMicrophone, faMicrophoneSlash, faPhoneSlash, faVideo, faVideoSlash } from '@fortawesome/free-solid-svg-icons';
+
+// Import types only
+import type {
+  IAgoraRTCClient,
+  ILocalAudioTrack,
+  ILocalVideoTrack,
+  IAgoraRTCRemoteUser,
+} from "agora-rtc-sdk-ng";
+
+interface AgoraCredentials {
+  appId: string;
+  channel: string;
+  token: string;
+  uid: string | number;
+}
+
+interface VideoConsultationProps {
+  appointmentId: string;
+  token: string;
+}
+
+const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
+  appointmentId,
+  token,
+}) => {
+  const router = useRouter();
+  const [permissionsGranted, setPermissionsGranted] = useState<boolean | null>(null);
+  const [agoraCredentials, setAgoraCredentials] = useState<AgoraCredentials | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [agoraRTC, setAgoraRTC] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+
+  const localPlayerRef = useRef<HTMLDivElement>(null);
+  const remotePlayerRef = useRef<HTMLDivElement>(null);
+  const clientRef = useRef<IAgoraRTCClient | null>(null);
+  const localTracksRef = useRef<[ILocalAudioTrack, ILocalVideoTrack] | null>(null);
+
+  // Initialize AgoraRTC on client side only
+  useEffect(() => {
+    const initAgora = async () => {
+      try {
+        const AgoraRTC = (await import('agora-rtc-sdk-ng')).default;
+        setAgoraRTC(AgoraRTC);
+      } catch (err) {
+        console.error('Failed to load AgoraRTC:', err);
+        setError('Failed to initialize video call system');
+      }
+    };
+    initAgora();
+  }, []);
+
+  // Step 1: Check for permissions
+  useEffect(() => {
+    if (!agoraRTC) return;
+
+    const checkPermissions = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setPermissionsGranted(true);
+      } catch (err) {
+        console.warn("Permissions denied or not available:", err);
+        setPermissionsGranted(false);
+        setIsLoading(false);
+        setError("Please allow camera and microphone permissions to join the video call.");
+      }
+    };
+
+    checkPermissions();
+  }, [agoraRTC]);
+
+  // Step 2: Fetch credentials only if permissions are granted
+  useEffect(() => {
+    if (!permissionsGranted || !agoraRTC) return;
+
+    const fetchCredentials = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `${API_CONFIG.BASE_URL}/appointments/join/${appointmentId}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch Agora credentials");
+        }
+
+        if (!data.agoraCredentials) {
+          throw new Error("Invalid response format");
+        }
+
+        setAgoraCredentials(data.agoraCredentials);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch credentials");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCredentials();
+  }, [permissionsGranted, appointmentId, token, agoraRTC]);
+
+  // Step 3: Start Agora client only if credentials exist
+  useEffect(() => {
+    if (!agoraCredentials || !agoraRTC) return;
+
+    const startCall = async () => {
+      try {
+        const client = agoraRTC.createClient({
+          mode: "rtc",
+          codec: "vp8",
+        });
+        clientRef.current = client;
+
+        client.on(
+          "user-published",
+          async (user: IAgoraRTCRemoteUser, mediaType: "audio" | "video") => {
+            if (!clientRef.current) return;
+            await clientRef.current.subscribe(user, mediaType);
+            if (mediaType === "video" && remotePlayerRef.current) {
+              user.videoTrack?.play(remotePlayerRef.current);
+            }
+            if (mediaType === "audio") {
+              user.audioTrack?.play();
+            }
+          }
+        );
+
+        client.on("user-unpublished", (user: IAgoraRTCRemoteUser) => {
+          console.log("Remote user unpublished:", user.uid);
+        });
+
+        await client.join(
+          agoraCredentials.appId,
+          agoraCredentials.channel,
+          agoraCredentials.token,
+          agoraCredentials.uid
+        );
+
+        const [audioTrack, videoTrack] = await Promise.all([
+          agoraRTC.createMicrophoneAudioTrack(),
+          agoraRTC.createCameraVideoTrack(),
+        ]);
+
+        localTracksRef.current = [audioTrack, videoTrack];
+
+        if (!clientRef.current) {
+          throw new Error("Client not initialized");
+        }
+
+        await clientRef.current.publish([audioTrack, videoTrack]);
+
+        if (localPlayerRef.current) {
+          videoTrack.play(localPlayerRef.current);
+        }
+      } catch (err) {
+        console.error("Agora initialization error:", err);
+        setError("Failed to join the video call.");
+      }
+    };
+
+    startCall();
+
+    return () => {
+      const cleanup = async () => {
+        if (clientRef.current) {
+          await clientRef.current.leave();
+          clientRef.current.removeAllListeners();
+        }
+        if (localTracksRef.current) {
+          localTracksRef.current.forEach((track) => {
+            track.stop();
+            track.close();
+          });
+        }
+        localTracksRef.current = null;
+      };
+      cleanup();
+    };
+  }, [agoraCredentials, agoraRTC]);
+
+  const handleMute = () => {
+    const audioTrack = localTracksRef.current?.[0];
+    if (audioTrack) {
+      const newState = !audioTrack.enabled;
+      audioTrack.setEnabled(newState);
+      setIsMuted(!newState);
+    }
+  };
+
+  const handleVideoToggle = () => {
+    const videoTrack = localTracksRef.current?.[1];
+    if (videoTrack) {
+      const newState = !videoTrack.enabled;
+      videoTrack.setEnabled(newState);
+      setIsVideoEnabled(newState);
+    }
+  };
+
+  const handleEndCall = async () => {
+    if (clientRef.current) {
+      await clientRef.current.leave();
+    }
+    if (localTracksRef.current) {
+      localTracksRef.current.forEach((track) => {
+        track.stop();
+        track.close();
+      });
+    }
+    localTracksRef.current = null;
+    router.push('/appointments');
+  };
+
+  // Step 4: Render
+  if (isLoading) {
+    return (
+      <div className="video-consultation-container center-message">
+        Initializing video call.
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
+  return (
+    <div className="video-consultation-container">
+      <div className="video-grid">
+        <div ref={localPlayerRef} className="video-player local-video"></div>
+        <div ref={remotePlayerRef} className="video-player remote-video"></div>
+      </div>
+      <div className="consultation-controls">
+        <button onClick={handleMute} className={`control-button ${isMuted ? 'muted' : ''}`}>
+          <FontAwesomeIcon icon={isMuted ? faMicrophoneSlash : faMicrophone} />
+        </button>
+        <button onClick={handleVideoToggle} className={`control-button ${!isVideoEnabled ? 'disabled' : ''}`}>
+          <FontAwesomeIcon icon={isVideoEnabled ? faVideo : faVideoSlash} />
+        </button>
+        <button onClick={handleEndCall} className="control-button end-call">
+          <FontAwesomeIcon icon={faPhoneSlash} />
+        </button>
+      </div>
+      {isMuted && <div className="mute-indicator">Audio Muted</div>}
+      {!isVideoEnabled && <div className="video-disabled-indicator">Video Disabled</div>}
+    </div>
+  );
+};
+
+// Wrap the component with dynamic import and disable SSR
+const VideoConsultation = dynamic(
+  () => Promise.resolve(VideoConsultationComponent),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="video-consultation-container center-message">
+        Loading video consultation...
+      </div>
+    ),
+  }
+);
+
+export default VideoConsultation;
