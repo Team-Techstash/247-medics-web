@@ -9,8 +9,12 @@ interface CTAProps {
 }
 
 export default function Button2({ text, href, style, onClick }: CTAProps) {
+    const buttonClass = style === "primary" 
+        ? "bg-primary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-secondary transition text-lg w-auto"
+        : "bg-secondary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-primary transition text-lg w-auto";
+
     return (
-        <Link href={href} className="bg-secondary text-white px-6 py-3 rounded-full inline-flex items-center hover:bg-primary transition text-lg w-auto" onClick={onClick}>
+        <Link href={href} className={buttonClass} onClick={onClick}>
             {text}
             <Image
                 src="/images/btn-arrow.svg"

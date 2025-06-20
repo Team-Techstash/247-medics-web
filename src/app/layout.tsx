@@ -4,7 +4,7 @@ import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 import { ReduxProvider } from '@/redux/reduxProvider';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-
+import LocationAccess from "./components/LocationAccess";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -44,6 +44,7 @@ export default function RootLayout({
         className={`${ubuntu.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+         <LocationAccess />
         <GoogleOAuthProvider clientId={clientId || '468261695968-kj1ihjttsagk24udd7lpj00hmjvq5nvq.apps.googleusercontent.com'}>
           <ReduxProvider>
             <Toaster

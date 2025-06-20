@@ -85,7 +85,7 @@ const Header = () => {
         { href: "/what-we-treat", label: "What we treat" },
         { href: "/online-doctor", label: "Online doctor" },
         { href: "/prices", label: "Prices" },
-        ...(authToken ? [{ href: "/appointments", label: "My Appointments" }] : []),
+        // ...(authToken ? [{ href: "/appointments", label: "My Appointments" }] : []),
     ];
 
     return (
@@ -119,7 +119,8 @@ const Header = () => {
                     {/* CTA Button and User Menu (Hidden on Mobile) */}
                     <div className="hidden md:flex items-center space-x-4">
                         <div className="flex items-center gap-8">
-                            <Button2 text="See A Doctor" href="/create-appointment" style="primary" onClick={handleSeeDoctorClick} />
+                            <Button2 text="See A Doctor" href="/create-appointment" style="secondary" onClick={handleSeeDoctorClick} />
+                            <Button2 text="See Patient" href="/doctor-signup" style="primary" />
                             {authToken ? (
                                 <div className="relative" ref={dropdownRef}>
                                     <button
@@ -137,6 +138,13 @@ const Header = () => {
                                                 onClick={() => setShowDropdown(false)}
                                             >
                                                 View Profile
+                                            </Link>
+                                            <Link
+                                                href="/appointments"
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                onClick={() => setShowDropdown(false)}
+                                            >
+                                                My Appointments
                                             </Link>
                                             <button
                                                 onClick={handleLogout}
@@ -200,7 +208,8 @@ const Header = () => {
                                 {label}
                             </Link>
                         ))}
-                        <Button2 text="See A Doctor" href="/appointment" style="primary" onClick={handleSeeDoctorClick} />
+                        <Button2 text="See A Doctor" href="/appointment" style="secondary" onClick={handleSeeDoctorClick} />
+                        <Button2 text="See Patient" href="/doctor-signup" style="primary" />
                         {authToken ? (
                             <>
                                 <Link
@@ -209,6 +218,13 @@ const Header = () => {
                                     onClick={() => setIsOpen(false)}
                                 >
                                     View Profile
+                                </Link>
+                                <Link
+                                    href="/appointments"
+                                    className="text-xl text-primary hover:text-secondary transition-colors"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    My Appointments
                                 </Link>
                                 <button
                                     onClick={handleLogout}

@@ -3,6 +3,8 @@ import {
   APPOINTMENTS_ROUTES,
   REFERENCE_ROUTES,
   DOCTOR_ROUTES,
+  REVIEWS_ROUTES,
+  COUNTRY_ROUTES,
 } from "../routes/api";
 import { API_CONFIG } from "@/config/api";
 import {
@@ -189,5 +191,27 @@ export const doctorService = {
       },
       jwtToken
     );
+  },
+};
+
+export const reviewsService = {
+  create: async (data: { rating: number; comment: string; appointmentId: string }): Promise<any> => {
+    return apiCall(REVIEWS_ROUTES.CREATE, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+export const countryService = {
+  getCountries: async (): Promise<any> => {
+    return apiCall(COUNTRY_ROUTES.GET_COUNTRIES, {
+      method: "GET",
+    });
+  },
+  getCities: async ( q: string = "te",countryCode: string): Promise<any> => {
+    return apiCall(COUNTRY_ROUTES.GET_CITIES(q, countryCode), {
+      method: "GET",
+    });
   },
 };

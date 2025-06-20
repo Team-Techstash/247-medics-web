@@ -25,6 +25,10 @@ export const APPOINTMENTS_ROUTES = {
     GET_APPOINTMENT_BY_ID: (id: string) => `appointments/${id}`,
 } as const; 
 
+export const REVIEWS_ROUTES = {
+    CREATE: 'reviews',
+} as const;
+
 export const REFERENCE_ROUTES = {
     GET_REFERENCES: 'users/references',
 } as const; 
@@ -32,4 +36,9 @@ export const REFERENCE_ROUTES = {
 export const DOCTOR_ROUTES = {
     CHECK_STRIPE_ONBOARDING: 'users/check-stripe-onboarding',
     ONBOARDING_SETUP: 'users/doctor-onboarding-link',
+} as const; 
+
+export const COUNTRY_ROUTES = {
+    GET_COUNTRIES: 'country',
+    GET_CITIES: (q: string = 'te', countryCode: string) => `country/cities?${q ? `q=${q}` : ''}&countryCode=${countryCode}`,
 } as const; 

@@ -13,18 +13,21 @@ import { fetchReferences, selectServiceTypes } from "@/redux/slices/referenceSli
 
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { io, Socket } from "socket.io-client";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Find() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const appointmentId = searchParams.get("id");
+    const responseId = searchParams.get("responseId");
     const socketRef = useRef<Socket | null>(null);
 
     const [appointment, setAppointment] = useState<any>(null);
     const [respondedDoctors, setRespondedDoctors] = useState<any[]>([]);
     const [selectedResponse, setSelectedResponse] = useState<any>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
     const serviceTypes = useSelector(selectServiceTypes);
 
@@ -32,7 +35,6 @@ export default function Find() {
         dispatch(fetchReferences());
     }, [dispatch]);
 
-    // Helper function to get service type name
     const getServiceTypeName = (code: string) => {
         if (!code || !serviceTypes) return 'N/A';
         const service = Object.values(serviceTypes).find(item => item.code === code);
@@ -47,12 +49,21 @@ export default function Find() {
                     if (response.success) {
                         setAppointment(response.data);
                         console.log(response);
-                        const normalizedDoctors = response.data.respondedDoctors.map((doctor: any) => ({
+                        const normalizedDoctors = response.data.respondedDoctors.map((doctor: any, index: number) => ({
                             ...doctor,
                             doctor: doctor.doctor || doctor.doctorId,
                         }));
                         normalizedDoctors.forEach((doctor: any) => delete doctor.doctorId);
                         setRespondedDoctors(normalizedDoctors);
+
+                        if (responseId) {
+                            const matchingResponse = normalizedDoctors.find(
+                                (response: any) => response._id === responseId
+                            );
+                            if (matchingResponse) {
+                                setSelectedResponse(matchingResponse);
+                            }
+                        }
                     } else {
                         console.error("Failed to fetch appointment", response.message);
                     }
@@ -63,7 +74,7 @@ export default function Find() {
 
             fetchAppointment();
         }
-    }, [appointmentId]);
+    }, [appointmentId, responseId]);
 
     useEffect(() => {
         if (!appointmentId) return;
@@ -92,7 +103,7 @@ export default function Find() {
         });
         socketRef.current.on("doctorResponded", (data: any) => {
             console.log('New doctor response:', data);
-            // Normalize the doctor data structure
+
             const normalizedData = {
                 ...data,
                 doctor: data.doctor || data.doctorId,
@@ -129,7 +140,6 @@ export default function Find() {
             return;
         }
 
-        // Normalize the doctor data structure
         const response = {
             ...selectedResponse,
             doctor: selectedResponse.doctor || selectedResponse.doctorId,
@@ -156,6 +166,19 @@ export default function Find() {
         setSelectedResponse(normalizeDoctorData(item));
     };
 
+    const handlePrevReviews = () => {
+        setCurrentReviewIndex(prev => Math.max(0, prev - 3));
+    };
+
+    const handleNextReviews = () => {
+        if (!selectedResponse) return;
+        const reviews = selectedResponse.doctor?.latestReviews || [];
+        setCurrentReviewIndex(prev => {
+            const maxIndex = Math.max(0, reviews.length - 3);
+            return Math.min(maxIndex, prev + 3);
+        });
+    };
+
     return (
         <MainLayout>
             <div className="container mx-auto px-4 py-8">
@@ -164,56 +187,169 @@ export default function Find() {
                     {respondedDoctors.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
                             <AiOutlineLoading3Quarters className="w-12 h-12 text-[#9904A1] animate-spin" />
-
-
-                            <h2 className="text-lg text-[#9904A1] max-w-lg">
-                                We've sent your request to the relevant doctors. Please wait for the doctors to respond to your request.
+                            {!responseId && (
+                                <h2 className="text-lg text-[#9904A1] max-w-lg">
+                                    We've sent your request to the relevant doctors. Please wait for the doctors to respond to your request.
+                                </h2>
+                            )}
+                        </div>
+                    ) : responseId && !selectedResponse ? (
+                        <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+                            <h2 className="text-lg text-red-500 max-w-lg">
+                                Invalid response ID. The requested response could not be found.
                             </h2>
                         </div>
-
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3">
-                            {/* Left side: Doctor Responses List */}
-                            <div className="col-span-1 p-6 bg-white max-h-[calc(100vh-200px)] overflow-y-auto relative after:content-[''] after:absolute after:right-0 after:top-4 after:bottom-4 after:w-[1px] after:bg-[#9904A1]/20">
-                                <h2 className="text-lg font-semibold text-[#9904A1] mb-4 text-center tracking-wide">Doctor Responses</h2>
+                        <div className={`grid ${responseId ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+                            {/* Left side: Doctor Responses List - Only show if no responseId */}
+                            {!responseId && (
+                                <div className="col-span-1 p-6 bg-white max-h-[calc(100vh-200px)] overflow-y-auto relative after:content-[''] after:absolute after:right-0 after:top-4 after:bottom-4 after:w-[1px] after:bg-[#9904A1]/20">
+                                    <h2 className="text-lg font-semibold text-[#9904A1] mb-4 text-center tracking-wide">Doctor Responses</h2>
 
-                                {respondedDoctors.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className={`cursor-pointer mb-3 p-4 rounded-2xl shadow-sm transition-all duration-200 ${selectedResponse === item
-                                            ? 'bg-[#faf8fc] ring-1 ring-[#9904A1]'
-                                            : 'bg-white hover:bg-gray-50 shadow-md'
-                                            }`}
-                                        onClick={() => handleSelectResponse(item)}
-                                    >
-                                        <h3 className="font-medium text-[#9904A1] text-md">
-                                            Dr. {item.doctor?.firstName} {item.doctor?.lastName}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            Appointment Time: {item.dateTime
-                                                ? new Date(item.dateTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
-                                                : 'N/A'}
-                                        </p>
-                                        <p className="text-sm text-gray-600">Appointment Fee: ${item.price}</p>
-                                    </div>
-                                ))}
-                            </div>
+                                    {respondedDoctors.map((item, index) => {
+                                        const reviews = item.doctor?.latestReviews || [];
+                                        const averageRating = reviews.length
+                                            ? (reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviews.length)
+                                            : 0;
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`cursor-pointer mb-3 p-4 rounded-2xl shadow-sm transition-all duration-200 ${selectedResponse === item
+                                                    ? 'bg-[#faf8fc] ring-1 ring-[#9904A1]'
+                                                    : 'bg-white hover:bg-gray-50 shadow-md'
+                                                    }`}
+                                                onClick={() => handleSelectResponse(item)}
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h3 className="font-medium text-[#9904A1] text-md">
+                                                        Dr. {item.doctor?.firstName} {item.doctor?.lastName}
+                                                    </h3>
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="flex items-center gap-1">
+                                                            <div className="flex">
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <svg
+                                                                        key={i}
+                                                                        className={`w-4 h-4 ${i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                                        fill="currentColor"
+                                                                        viewBox="0 0 20 20"
+                                                                    >
+                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                    </svg>
+                                                                ))}
+                                                            </div>
+                                                            <span className="text-base font-bold text-gray-700">{averageRating.toFixed(1)}</span>
+                                                            <span className="text-sm text-gray-600">({reviews.length})</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    Appointment Time: {item.dateTime
+                                                        ? new Date(item.dateTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+                                                        : 'N/A'}
+                                                </p>
+                                                <p className="text-sm text-gray-600">Appointment Fee: ${item.price}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
                             {/* Right side: Selected Response Details */}
-                            <div className="col-span-2 p-8 bg-white flex flex-col">
-                                <h2 className="text-xl font-semibold text-[#9904A1] mb-8 text-center tracking-wide sticky top-0 bg-white z-10">Appointment Proposal</h2>
+                            <div className="col-span-2 p-8 bg-white flex flex-col justify-center items-center">
+                                <h2 className="text-xl font-semibold text-[#9904A1] mb-8 text-center tracking-wide sticky top-0 bg-white z-10">Response Details</h2>
 
                                 {selectedResponse ? (
-                                    <div className="space-y-6 pr-4">
+                                    <div className={`space-y-6 pr-4 ${responseId ? 'w-[80%]' : ''}`}>
                                         {/* Doctor Info */}
-                                        {/* bg-[#faf8fc] */}
                                         <div className="bg-white shadow-md border border-gray-200 rounded-2xl">
                                             <h2 className="text-lg bg-[#faf8fc] font-semibold text-[#9904A1] mb-2 border-b border-gray-200 py-2 px-5 rounded-t-2xl ">Doctor Details</h2>
                                             <div className="p-5">
-                                                <p className="text-gray-700"><span className="font-medium">Name:</span> Dr. {selectedResponse.doctor?.firstName} {selectedResponse.doctor?.lastName}</p>
-                                                {/* <p className="text-gray-700"><span className="font-medium">Email:</span> {selectedResponse.doctorId?.email}</p> */}
-                                            </div>
+                                                {selectedResponse && (() => {
+                                                    const reviews = selectedResponse.doctor?.latestReviews || [];
+                                                    const averageRating = reviews.length
+                                                        ? (reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviews.length)
+                                                        : 0;
+                                                    return (
+                                                        <>
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <p className="text-gray-700"><span className="font-medium">Name:</span> Dr. {selectedResponse.doctor?.firstName} {selectedResponse.doctor?.lastName}</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="flex items-center">
+                                                                        {[...Array(5)].map((_, index) => (
+                                                                            <svg
+                                                                                key={index}
+                                                                                className={`w-5 h-5 ${index < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                                                fill="currentColor"
+                                                                                viewBox="0 0 20 20"
+                                                                            >
+                                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                            </svg>
+                                                                        ))}
+                                                                    </div>
+                                                                    <span className="text-sm text-gray-600">{averageRating.toFixed(1)} ({reviews.length} reviews)</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-4">
+                                                                {reviews.length > 0 && (
+                                                                    <>
+                                                                        <h3 className="text-md font-semibold text-gray-800 mb-4">Recent Reviews</h3>
+                                                                        <div className="relative">
+                                                                            <div className="flex items-center">
+                                                                                <button 
+                                                                                    onClick={handlePrevReviews}
+                                                                                    disabled={currentReviewIndex === 0}
+                                                                                    className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                                >
+                                                                                    <ChevronLeft className="w-6 h-6 text-gray-600" />
+                                                                                </button>
+                                                                                
+                                                                                <div className="flex-1 overflow-hidden">
+                                                                                    <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${currentReviewIndex * (100/3)}%)` }}>
+                                                                                        {reviews.map((review: any) => (
+                                                                                            <div 
+                                                                                                key={review._id} 
+                                                                                                className="w-1/3 flex-shrink-0 px-2"
+                                                                                            >
+                                                                                                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm h-full">
+                                                                                                    <div className="flex items-center gap-2 mb-2">
+                                                                                                        <div className="flex">
+                                                                                                            {[...Array(5)].map((_, i) => (
+                                                                                                                <svg
+                                                                                                                    key={i}
+                                                                                                                    className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                                                                                    fill="currentColor"
+                                                                                                                    viewBox="0 0 20 20"
+                                                                                                                >
+                                                                                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                                                                </svg>
+                                                                                                            ))}
+                                                                                                        </div>
+                                                                                                        <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                                                                                    </div>
+                                                                                                    <p className="text-sm text-gray-600 mb-2 line-clamp-3">{review.comment || ""}</p>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
 
+                                                                                <button 
+                                                                                    onClick={handleNextReviews}
+                                                                                    disabled={currentReviewIndex >= reviews.length - 3}
+                                                                                    className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                                >
+                                                                                    <ChevronRight className="w-6 h-6 text-gray-600" />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
                                         </div>
 
                                         {/* Appointment Info */}
@@ -250,9 +386,7 @@ export default function Find() {
                                 )}
                             </div>
                         </div>
-                    )
-                    }
-
+                    )}
                 </div>
             </div>
         </MainLayout>

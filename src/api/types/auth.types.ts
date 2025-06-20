@@ -1,4 +1,29 @@
 // Address type
+export interface Address {
+    streetAddress1: string;
+    city: string;
+    countryCode: string;
+    countryName: string;
+}
+
+interface EmergencyContact {
+    email: string;
+    relation: string;
+    fullName: string;
+    phone: string;
+}
+
+interface RegulatoryDetails {
+    authorityName: string;
+    registrationNumber: string;
+    onSpecialistRegister: boolean;
+    allowStatusVerification: boolean;
+}
+
+interface DocProfile {
+    emergencyContact: EmergencyContact;
+    regulatoryDetails: RegulatoryDetails;
+}
 
 export interface RegisterFormData {
     firstName: string;
@@ -8,6 +33,10 @@ export interface RegisterFormData {
     phone: string;
     password: string;
     role: string;
+    address: Address;
+    gender: string;
+    age: number;
+    docProfile: DocProfile;
 }
 
 // Register form errors
@@ -17,7 +46,18 @@ export interface RegisterFormErrors {
     email?: string;
     phone?: string;
     password?: string;
-    confirmPassword?:string;
+    confirmPassword?: string;
+    streetAddress1?: string;
+    city?: string;
+    country?: string;
+    gender?: string;
+    age?: string;
+    emergencyContactEmail?: string;
+    emergencyContactRelation?: string;
+    emergencyContactFullName?: string;
+    emergencyContactPhone?: string;
+    authorityName?: string;
+    registrationNumber?: string;
 }
 
 // Login form data
@@ -38,9 +78,17 @@ export interface User {
     _id: string;
     firstName: string;
     lastName: string;
-    pronouns?: string;
     email: string;
-    phone?: string;
+    phone: string;
+    pronouns: string;
+    role: string;
+    isProfileComplete: boolean;
+    address: Address;
+    authMethod: string;
+    createdAt: string;
+    emailVerified: boolean;
+    fcmTokens: string[];
+    phoneVerified: boolean;
 }
 
 // Auth Response Types
