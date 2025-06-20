@@ -474,7 +474,6 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                     value={countryCode}
                                                     onChange={handleCountryCodeChange}
                                                     className="w-16 border border-primary rounded-l-md px-2 py-2 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
-                                                    placeholder="+65"
                                                     autoComplete="off"
                                                 />
                                                 <input
@@ -482,7 +481,6 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                     value={localNumber}
                                                     onChange={handleLocalNumberChange}
                                                     className="flex-1 border border-primary rounded-r-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] text-gray-700"
-                                                    placeholder="9123 4567"
                                                     autoComplete="off"
                                                 />
                                             </div>
