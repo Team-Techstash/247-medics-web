@@ -3,16 +3,18 @@ import storage from 'redux-persist/lib/storage';
 import { persistReducer, persistStore } from 'redux-persist';
 import appointmentFormReducer from './slices/appointmentFormSlice';
 import referenceReducer from './slices/referenceSlice';
+import locationReducer from './slices/locationSlice';
 
 const rootReducer = combineReducers({
   appointmentForm: appointmentFormReducer,
   references: referenceReducer,
+  location: locationReducer,
 });
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['appointmentForm'],
+  whitelist: ['appointmentForm', 'location'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -239,6 +239,7 @@ export default function CreateAppointment({
   const [authToken, setAuthToken] = useState<string | null>(null);
   const dispatch = useDispatch();
   const formData = useSelector((state: RootState) => state.appointmentForm);
+  const location = useSelector((state: RootState) => state.location);
   const [services, setServices] = useState<ServicesMap>({});
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -253,6 +254,17 @@ export default function CreateAppointment({
     }
     loadReferences()
   }, []);
+
+  useEffect(() => {
+    // Set location in the form when it becomes available
+    if (location.status === 'succeeded' && location.latitude && location.longitude) {
+      dispatch(setAppointmentForm({
+        location: {
+          coordinates: [location.longitude, location.latitude],
+        },
+      }));
+    }
+  }, [location.status, location.latitude, location.longitude, dispatch]);
 
   const determineInitialStep = () => {
     if (

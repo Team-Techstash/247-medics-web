@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import MainLayout from '@/app/layouts/MainLayout';
 import { 
   FaPaperPlane, 
@@ -14,65 +13,80 @@ import {
 } from 'react-icons/fa';
 import { useParams } from 'next/navigation';
 import ImageWithPlaceholder from '@/app/components/ImageWithPlaceholder';
-
-const mockAppointmentData = {
-  _id: 'mock-apt-1',
-  doctorId: {
-    _id: 'doc-1',
-    firstName: 'Malik',
-    lastName: 'Saleem',
-    avatar: null,
-  },
-  patientId: {
-    _id: 'patient-1',
-    firstName: 'Sultan',
-    lastName: '',
-    avatar: null,
-  },
-  scheduledAt: '2025-06-19T05:35:00.000Z',
-  timezone: 'Europe/London Time',
-  serviceType: 'Primary Care Consultation',
-  paymentStatus: 'free',
-  cost: 0,
-  messages: [
-    {
-      _id: 'msg-1',
-      sender: 'doc-1',
-      message: 'Hi',
-      createdAt: '2025-06-19T00:25:16.000Z',
-    },
-    {
-      _id: 'msg-2',
-      sender: 'patient-1',
-      message: 'Hey. This is a test message. Please ignore.',
-      createdAt: '2025-06-19T19:26:40.000Z',
-    },
-  ],
-};
-
-const mockCurrentUser = {
-  _id: 'patient-1',
-  name: 'Sultan',
-  role: 'patient',
-};
+import { appointmentsService } from '@/api/services/service';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '@/redux/store';
+import { 
+  fetchReferences, 
+  selectServiceTypes,
+  selectReferencesLoading 
+} from '@/redux/slices/referenceSlice';
 
 export default function DoctorAppointmentReviewPage() {
   const params = useParams();
   const appointmentId = params.id;
+  const dispatch = useDispatch<AppDispatch>();
 
-  const [appointment, setAppointment] = useState(null);
+  const [appointment, setAppointment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Get reference data from Redux
+  const serviceTypes = useSelector(selectServiceTypes);
+  const referencesLoading = useSelector(selectReferencesLoading);
 
   useEffect(() => {
-    setCurrentUser(mockCurrentUser);
-    setAppointment(mockAppointmentData);
-    setMessages(mockAppointmentData.messages);
-    setLoading(false);
+    dispatch(fetchReferences());
+  }, [dispatch]);
+
+  // Helper function to get reference name by code
+  const getReferenceName = (code: string, referenceData: { [key: string]: any }) => {
+    const item = Object.values(referenceData).find((item: any) => item.code === code);
+    return item ? item.name : code;
+  };
+
+  useEffect(() => {
+    const fetchAppointmentDetails = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+          setError("Please login to view appointment details");
+          return;
+        }
+
+        const response = await appointmentsService.getAppointmentById(appointmentId as string);
+        if (response.success) {
+          setAppointment(response.data);
+          // Initialize messages if they exist in the appointment data
+          if (response.data.messages) {
+            setMessages(response.data.messages);
+          }
+          
+          setCurrentUser({
+            _id: response.data.patientId?._id || 'patient-1',
+            name: response.data.patientId?.firstName || 'Patient',
+            role: 'patient',
+          });
+        } else {
+          setError(response.message || "Failed to fetch appointment details");
+        }
+      } catch (e: any) {
+        setError(e.message || "Failed to fetch appointment details");
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (appointmentId) {
+      fetchAppointmentDetails();
+    }
   }, [appointmentId]);
 
   const handleSendMessage = async () => {
@@ -91,7 +105,7 @@ export default function DoctorAppointmentReviewPage() {
     }, 500);
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (loading || referencesLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
   if (error) return <div className="flex h-screen items-center justify-center text-red-500">{error}</div>;
   if (!appointment) return <div className="flex h-screen items-center justify-center">Appointment not found.</div>;
 
@@ -112,9 +126,9 @@ export default function DoctorAppointmentReviewPage() {
             Completed
             </h1>
             <div className="mt-4 max-w-2xl mx-auto text-lg text-gray-600 text-left sm:text-center">
-                <p><span className="font-semibold">Dear {patient.firstName},</span></p>
+                <p><span className="font-semibold">Dear {patient?.firstName || 'Patient'},</span></p>
                 <p className='mt-2'>
-                  Thank you for using 24/7 Medics! Following your consultation, you can ask Dr. {doctor.lastName} additional questions within 7 days using the chat below.
+                  Thank you for using 24/7 Medics! Following your consultation, you can ask Dr. {doctor?.lastName || doctor?.firstName} additional questions within 7 days using the chat below.
                 </p>
                 <p className='mt-2'>
                   For future medical needs, trust{' '}
@@ -131,15 +145,15 @@ export default function DoctorAppointmentReviewPage() {
                 {/* Appointment Details Card */}
                 <div className="flex items-start gap-6">
                   <ImageWithPlaceholder
-                    src={doctor.avatar}
-                    alt={`Dr. ${doctor.firstName} ${doctor.lastName}`}
+                    src={doctor?.avatar}
+                    alt={`Dr. ${doctor?.firstName || ''} ${doctor?.lastName || ''}`}
                     width={80}
                     height={80}
                     className="rounded-full flex-shrink-0"
                   />
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold text-gray-800">
-                      Dr. {doctor.firstName} {doctor.lastName}, MD
+                      Dr. {doctor?.firstName || ''} {doctor?.lastName || ''}
                     </h2>
                     <ul className="mt-3 space-y-2 text-gray-600">
                       <li className="flex items-center gap-3">
@@ -163,11 +177,11 @@ export default function DoctorAppointmentReviewPage() {
                       </li>
                       <li className="flex items-center gap-3">
                         <FaMapMarkerAlt className="text-gray-500" />
-                        <span>{appointment.timezone}</span>
+                        <span>{appointment.timezone || 'UTC'}</span>
                       </li>
                       <li className="flex items-center gap-3">
                         <FaBriefcaseMedical className="text-gray-500" />
-                        <span>{appointment.serviceType}</span>
+                        <span>{getReferenceName(appointment.serviceType, serviceTypes)}</span>
                       </li>
                     </ul>
                   </div>
@@ -192,53 +206,51 @@ export default function DoctorAppointmentReviewPage() {
             {/* Messaging Section */}
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <h3 className="text-xl font-bold text-gray-900">
-                Send a message to Dr. {doctor.firstName} {doctor.lastName}
+                Send a message to Dr. {doctor?.firstName || ''} {doctor?.lastName || ''}
               </h3>
               <div className="mt-4 h-80 space-y-4 overflow-y-auto rounded-lg bg-gray-50/80 p-4">
                 {messages.map((msg) => (
                   <div
                     key={msg._id}
-                    className={`flex items-end gap-2.5 ${msg.sender === currentUser?._id ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${
+                      msg.sender === currentUser?._id ? 'justify-end' : 'justify-start'
+                    }`}
                   >
-                    {msg.sender !== currentUser?._id && (
-                      <ImageWithPlaceholder
-                        src={chatPartner.avatar}
-                        alt={chatPartner.firstName}
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                      />
-                    )}
                     <div
-                      className={`max-w-md rounded-xl px-4 py-2 ${
+                      className={`max-w-xs rounded-lg px-4 py-2 ${
                         msg.sender === currentUser?._id
-                          ? 'rounded-br-none bg-primary text-white'
-                          : 'rounded-bl-none bg-gray-200 text-gray-800'
+                          ? 'bg-primary text-white'
+                          : 'bg-white text-gray-800 border border-gray-200'
                       }`}
                     >
                       <p className="text-sm">{msg.message}</p>
-                      <p className={`mt-1 text-xs ${msg.sender === currentUser?._id ? 'text-purple-200' : 'text-gray-500'} text-right`}>
-                        {new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(msg.createdAt).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-4 flex gap-2">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Message the doctor..."
-                  className="flex-1 rounded-full border-gray-300 px-4 py-2 shadow-sm focus:border-primary focus:ring-primary"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Type your message..."
+                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-primary focus:outline-none"
                   disabled={sending}
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-secondary disabled:bg-opacity-50"
-                  disabled={sending || !newMessage.trim()}
+                  disabled={!newMessage.trim() || sending}
+                  className="rounded-lg bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaPaperPlane />
+                  {sending ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <FaPaperPlane />
+                  )}
                 </button>
               </div>
             </div>
