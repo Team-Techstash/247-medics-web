@@ -44,9 +44,9 @@ export default function RootLayout({
         className={`${ubuntu.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-         <LocationAccess />
         <GoogleOAuthProvider clientId={clientId || '468261695968-kj1ihjttsagk24udd7lpj00hmjvq5nvq.apps.googleusercontent.com'}>
           <ReduxProvider>
+            <LocationAccess />
             <Toaster
               toastOptions={{
                 success: {

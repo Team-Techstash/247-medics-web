@@ -1,37 +1,43 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AppointmentFormData {
+  isForSelf: boolean | null;
   age: number | null;
-  isForSelf: boolean;
+  reason: string;
   country: string;
   city: string;
-  formattedAddress: string;
   serviceType: string;
   firstName: string;
   lastName: string;
+  gender: string;
   pronouns: string;
-  gender:string,
   email: string;
   visitType: string;
   appointmentMode: string;
-  reason: string;
+  formattedAddress: string;
+  location: {
+    coordinates: [number, number];
+  };
 }
 
 const initialState: AppointmentFormData = {
+  isForSelf: null,
   age: null,
-  isForSelf: true,
+  reason: '',
   country: '',
   city: '',
-  formattedAddress: '',
   serviceType: '',
   firstName: '',
   lastName: '',
-  pronouns: '',
   gender: '',
+  pronouns: '',
   email: '',
-  visitType: 'urgent-care',
-  appointmentMode: 'video',
-  reason: '',
+  visitType: 'video',
+  appointmentMode: 'now',
+  formattedAddress: '',
+  location: {
+    coordinates: [0, 0],
+  },
 };
 
 const appointmentFormSlice = createSlice({
