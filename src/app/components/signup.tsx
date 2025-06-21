@@ -32,6 +32,28 @@ export default function SignUp({ onSubmit, isLoading }: SignUp) {
         phone: "",
         password: "",
         role: "patient",
+        address: {
+            streetAddress1: "",
+            city: "",
+            countryCode: "",
+            countryName: "",
+        },
+        gender: "",
+        age: 0,
+        docProfile: {
+            emergencyContact: {
+                email: "",
+                relation: "",
+                fullName: "",
+                phone: "",
+            },
+            regulatoryDetails: {
+                authorityName: "",
+                registrationNumber: "",
+                onSpecialistRegister: false,
+                allowStatusVerification: false,
+            },
+        },
     });
     const [errors, setErrors] = useState<RegisterFormErrors>({});
     const [error, setError] = useState("");

@@ -10,8 +10,7 @@ const VideoConsultationPage: React.FC<PageProps> = ({ params }) => {
   return (
     <div className="min-h-screen bg-gray-100">
       <VideoConsultation 
-        appointmentId={params.appointmentId}
-        token={params.token}
+        meetingCode={params.meetingCode}
       />
     </div>
   );
