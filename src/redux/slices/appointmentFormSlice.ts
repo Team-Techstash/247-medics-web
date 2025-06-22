@@ -32,8 +32,8 @@ const initialState: AppointmentFormData = {
   gender: '',
   pronouns: '',
   email: '',
-  visitType: 'video',
-  appointmentMode: 'now',
+  visitType: 'urgent-care',
+  appointmentMode: 'video',
   formattedAddress: '',
   location: {
     coordinates: [0, 0],

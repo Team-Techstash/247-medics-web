@@ -25,6 +25,12 @@ export const APPOINTMENTS_ROUTES = {
     GET_APPOINTMENT_BY_ID: (id: string) => `appointments/${id}`,
 } as const; 
 
+export const CHAT_ROUTES = {
+    GET_MESSAGES: (chatId: string, limit: number = 30, page: number = 1) => 
+        `chat/messages/${chatId}?limit=${limit}&page=${page}`,
+    GET_CHAT_SESSION: 'chat/session',
+} as const;
+
 export const REVIEWS_ROUTES = {
     CREATE: 'reviews',
 } as const;

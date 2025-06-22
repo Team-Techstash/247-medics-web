@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { GoogleLogin } from '@react-oauth/google';
 import Cookies from "js-cookie";
 import { showToast } from "@/utils/toast";
+import SearchableCitySelector from "./SearchableCitySelector";
 
 type DoctorSignUp = {
     onSubmit: (formData: any) => void;
@@ -69,7 +70,6 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
     const [error, setError] = useState("");
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [countries, setCountries] = useState<Country[]>([]);
-    const [cities, setCities] = useState<string[]>([]);
 
     useEffect(() => {
         if (formData.phone) {
@@ -125,28 +125,24 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
             };
             return updatedData;
         });
-        // Fetch cities for the selected country
-        if (countryCode) {
-            countryService.getCities("te", countryCode)
-                .then(response => {
-                    console.log('Cities API response:', response.data[0].cities);
-                    setCities(response.data[0].cities || []);
-                })
-                .catch(err => {
-                    console.error('Failed to fetch cities:', err);
-                    setCities([]);
-                });
-        } else {
-            setCities([]);
-        }
     };
 
-    const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleCitySelect = (city: string) => {
         setFormData(prev => ({
             ...prev,
             address: {
                 ...prev.address,
-                city: e.target.value
+                city: city
+            }
+        }));
+    };
+
+    const handleCityClear = () => {
+        setFormData(prev => ({
+            ...prev,
+            address: {
+                ...prev.address,
+                city: ""
             }
         }));
     };
@@ -559,21 +555,13 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                                     City
                                                 </label>
                                                 <div className="mt-1">
-                                                    <select
-                                                        id="city"
-                                                        name="city"
-                                                        value={formData.address.city}
-                                                        onChange={handleCityChange}
+                                                    <SearchableCitySelector
+                                                        selectedCity={formData.address.city}
+                                                        onCitySelect={handleCitySelect}
+                                                        onCityClear={handleCityClear}
+                                                        countryCode={selectedCountry}
                                                         disabled={!selectedCountry}
-                                                        className="appearance-none block w-full px-3 py-2 border border-primary rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary hover:bg-primary/[.1] disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700"
-                                                    >
-                                                        <option value="">Select City</option>
-                                                        {cities.map((city, index) => (
-                                                            <option key={index} value={city}>
-                                                                {city}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    />
                                                 </div>
                                                 {errors.city && (
                                                     <div className="text-red-600 text-xs mt-1">

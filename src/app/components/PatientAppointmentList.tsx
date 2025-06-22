@@ -6,10 +6,11 @@ import { appointmentsService } from '@/api/services/service';
 import Header from './Header';
 import Footer from './Footer';
 import { MdInfoOutline } from 'react-icons/md';
-import { FaInfoCircle } from 'react-icons/fa';
+import { FaInfoCircle, FaRocketchat } from 'react-icons/fa';
 import { FaVideo } from 'react-icons/fa';
 import JoinVideoButton from './JoinVideoButton';
 import { FiExternalLink } from 'react-icons/fi';
+import Link from 'next/link';
 
 interface Appointment {
     _id: string;
@@ -217,13 +218,13 @@ export default function PatientAppointmentList() {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={4} className="text-center py-8 text-gray-400">
+                                        <td colSpan={5} className="text-center py-8 text-gray-400">
                                             Loading...
                                         </td>
                                     </tr>
                                 ) : paginatedAppointments.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="text-center py-8 text-gray-400">
+                                        <td colSpan={5} className="text-center py-8 text-gray-400">
                                             No appointments found
                                         </td>
                                     </tr>
@@ -259,19 +260,25 @@ export default function PatientAppointmentList() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                <div className="flex justify-center space-x-2">
+                                                <div className="flex justify-center items-center space-x-4">
                                                     <button
                                                         className="text-gray-400 hover:text-gray-500"
                                                         title="View Details"
                                                         onClick={() => router.push(`/appointments/${appointment._id}`)}
                                                     >
-                                                        <FiExternalLink className="text-xl" />
+                                                        <FiExternalLink className="text-2xl" />
                                                     </button>
+                                                    {appointment.paymentStatus === 'paid' && (
+                                                        <Link href={`/appointments/${appointment._id}/chat`} className="text-gray-400 hover:text-gray-500" title="Chat with Doctor">
+                                                            <FaRocketchat className="text-2xl" />
+                                                        </Link>
+                                                    )}
+                                                    
                                                     {(appointment.status === 'in-progress' || appointment.status === 'confirmed') && (
                                                         <JoinVideoButton
                                                             appointmentId={appointment._id}
                                                             token={localStorage.getItem('authToken') || ''}
-                                                            className="text-[#9904A1] hover:text-[#9904A1]"
+                                                            className="text-[#9904A1] hover:text-[#9904A1] text-2xl"
                                                             status={appointment.status}
                                                         />
                                                     )}
