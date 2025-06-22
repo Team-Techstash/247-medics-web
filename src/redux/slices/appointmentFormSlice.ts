@@ -15,7 +15,7 @@ interface AppointmentFormData {
   visitType: string;
   appointmentMode: string;
   formattedAddress: string;
-  location: {
+  location?: {
     coordinates: [number, number];
   };
 }
@@ -35,9 +35,6 @@ const initialState: AppointmentFormData = {
   visitType: 'urgent-care',
   appointmentMode: 'video',
   formattedAddress: '',
-  location: {
-    coordinates: [0, 0],
-  },
 };
 
 const appointmentFormSlice = createSlice({
