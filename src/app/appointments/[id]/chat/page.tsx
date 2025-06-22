@@ -29,7 +29,7 @@ export default function DoctorAppointmentReviewPage() {
   const params = useParams();
   const appointmentId = params.id;
   const dispatch = useDispatch<AppDispatch>();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [appointment, setAppointment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -54,11 +54,6 @@ export default function DoctorAppointmentReviewPage() {
     const item = Object.values(referenceData).find((item: any) => item.code === code);
     return item ? item.name : code;
   };
-
-  // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   // Establish WebSocket connection on mount and set up listeners
   useEffect(() => {
@@ -190,6 +185,14 @@ export default function DoctorAppointmentReviewPage() {
       setMessages(prev => [...prev, tempMessage]);
       setNewMessage('');
       setError(null); // Clear any previous errors
+
+      // Scroll the chat container to the bottom to show the new message
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          const container = messagesContainerRef.current;
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 50);
     } catch (error) {
       console.error('Error sending message:', error);
       setError('Failed to send message');
@@ -309,7 +312,10 @@ export default function DoctorAppointmentReviewPage() {
                   </span>
                 </div>
               </div>
-              <div className="mt-4 h-80 space-y-4 overflow-y-auto rounded-lg bg-gray-50/80 p-4">
+              <div
+                ref={messagesContainerRef}
+                className="mt-4 h-80 space-y-4 overflow-y-auto rounded-lg bg-gray-50/80 p-4"
+              >
                 {messages.length === 0 ? (
                   <div className="text-center text-gray-500 py-8">
                     <p>No messages yet. Start the conversation!</p>
@@ -337,7 +343,6 @@ export default function DoctorAppointmentReviewPage() {
                     </div>
                   ))
                 )}
-                <div ref={messagesEndRef} />
               </div>
               <div className="mt-4 flex gap-2">
                 <input
