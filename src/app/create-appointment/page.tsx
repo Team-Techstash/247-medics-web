@@ -5,14 +5,23 @@ import MainLayout from "../layouts/MainLayout";
 import { appointmentsService } from "@/api/services/service";
 import { showToast } from '../../utils/toast';
 import { useRouter, useSearchParams } from "next/navigation";
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { resetAppointmentForm } from '@/redux/slices/appointmentFormSlice';
+import { setLocationStart } from '@/redux/slices/locationSlice';
+import { RootState } from '@/redux/store';
 
 export default function CreateAppointmentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const location = useSelector((state: RootState) => state.location);
+
+  useEffect(() => {
+    if (location.status === 'failed') {
+      dispatch(setLocationStart());
+    }
+  }, [dispatch, location.status]);
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
