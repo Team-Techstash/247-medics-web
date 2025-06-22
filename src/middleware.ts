@@ -5,12 +5,12 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
     const authToken = request.cookies.get('authToken')?.value
     const isAppointmentRoute = request.nextUrl.pathname.startsWith('/appointments')
-    const isVideoConsultationRoute = request.nextUrl.pathname.includes('/video-consultation')
-    const isJoinMeetingRoute = request.nextUrl.pathname.includes('/join-meeting')
+    // const isVideoConsultationRoute = request.nextUrl.pathname.includes('/video-consultation')
+    // const isJoinMeetingRoute = request.nextUrl.pathname.includes('/join-meeting')
 
     // If trying to access appointment routes without auth token, redirect to login
     // Skip auth check for video consultation and join-meeting routes
-    if (isAppointmentRoute && !authToken && !isVideoConsultationRoute && !isJoinMeetingRoute) {
+    if (isAppointmentRoute && !authToken) {
         const loginUrl = new URL('/login', request.url)
         loginUrl.searchParams.set('from', request.nextUrl.pathname)
         return NextResponse.redirect(loginUrl)

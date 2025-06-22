@@ -21,6 +21,7 @@ interface Appointment {
     phone?: string;
     paymentStatus?: string;
     reviewId?: string;
+    patientMeetingUrl?: string;
     doctorId?: {
         firstName: string;
         lastName: string;
@@ -45,6 +46,13 @@ export default function PatientAppointmentList() {
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);
     const rowsPerPage = 10;
+
+    // Function to extract meeting code from patientMeetingUrl
+    const extractMeetingCode = (url: string): string => {
+        if (!url) return '';
+        const parts = url.split('/');
+        return parts[parts.length - 1] || '';
+    };
 
     useEffect(() => {
         fetchAppointments();
@@ -72,6 +80,7 @@ export default function PatientAppointmentList() {
                 createdAt: item.createdAt,
                 scheduledAt: item.scheduledAt,
                 doctorId: item.doctorId,
+                patientMeetingUrl: item.patientMeetingUrl || '',
             }));
             console.log('Mapped appointments:', mapped);
             setAppointments(mapped);
@@ -276,8 +285,7 @@ export default function PatientAppointmentList() {
                                                     
                                                     {(appointment.status === 'in-progress' || appointment.status === 'confirmed') && (
                                                         <JoinVideoButton
-                                                            appointmentId={appointment._id}
-                                                            token={localStorage.getItem('authToken') || ''}
+                                                            meetingCode={extractMeetingCode(appointment.patientMeetingUrl || '')}
                                                             className="text-[#9904A1] hover:text-[#9904A1] text-2xl"
                                                             status={appointment.status}
                                                         />

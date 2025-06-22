@@ -5,22 +5,20 @@ import { useRouter } from 'next/navigation';
 import { FaVideo } from 'react-icons/fa';
 
 interface JoinVideoButtonProps {
-  appointmentId: string;
-  token: string;
+  meetingCode: string;
   status: string;
   className?: string;
 }
 
 const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({ 
-  appointmentId, 
-  token,
+  meetingCode,
   status,
   className = ''
 }) => {
   const router = useRouter();
 
   const handleJoinVideo = () => {
-    router.push(`/appointments/join-meeting/${appointmentId}/${token}`);
+    router.push(`/meeting/${meetingCode}`);
   };
 
   return (
