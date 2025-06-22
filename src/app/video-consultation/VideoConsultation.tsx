@@ -85,7 +85,7 @@ const VideoConsultationComponent: React.FC<VideoConsultationProps> = ({
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${API_CONFIG.BASE_URL}/appointments/join-meeting/${meetingCode}`,
+          `${API_CONFIG.BASE_URL}/appointments/join/${meetingCode}`,
           {
             method: "POST",
             headers: {
