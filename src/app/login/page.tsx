@@ -37,7 +37,16 @@ export default function LoginPage() {
                 console.log(response)
                 // Redirect to the original requested page or home
                 const from = searchParams.get('from') || '/';
-                router.push(from);
+                const responseId = searchParams.get('responseId');
+                
+                let returnUrl = from;
+                if (responseId) {
+                    const url = new URL(from, window.location.origin);
+                    url.searchParams.set('responseId', responseId);
+                    returnUrl = url.toString();
+                }
+                
+                router.push(returnUrl);
             } else {
                 showToast.error(response.message || "Login failed");
             }

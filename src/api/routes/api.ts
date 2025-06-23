@@ -23,6 +23,7 @@ export const APPOINTMENTS_ROUTES = {
     CREATE: 'appointments/',
     GET_APPOINTMENTS: 'appointments',
     GET_APPOINTMENT_BY_ID: (id: string) => `appointments/${id}`,
+    GET_DOCTOR_RESPONSES: (appointmentId: string) => `appointments/doctor-response/${appointmentId}`,
 } as const; 
 
 export const CHAT_ROUTES = {

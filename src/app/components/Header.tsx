@@ -120,7 +120,7 @@ const Header = () => {
                     <div className="hidden md:flex items-center space-x-4">
                         <div className="flex items-center gap-8">
                             <Button2 text="See A Doctor" href="/create-appointment" style="secondary" onClick={handleSeeDoctorClick} />
-                            <Button2 text="See Patient" href="/doctor-signup" style="primary" />
+                            <Button2 text="Doctor Signup" href="/doctor-signup" style="primary" />
                             {authToken ? (
                                 <div className="relative" ref={dropdownRef}>
                                     <button
@@ -208,8 +208,8 @@ const Header = () => {
                                 {label}
                             </Link>
                         ))}
-                        <Button2 text="See A Doctor" href="/appointment" style="secondary" onClick={handleSeeDoctorClick} />
-                        <Button2 text="See Patient" href="/doctor-signup" style="primary" />
+                        <Button2 text="See A Doctor" href="/create-appointment" style="secondary" onClick={handleSeeDoctorClick} />
+                        <Button2 text="Doctor Signup" href="/doctor-signup" style="primary" />
                         {authToken ? (
                             <>
                                 <Link
