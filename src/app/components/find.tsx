@@ -28,6 +28,7 @@ export default function Find() {
     const [selectedResponse, setSelectedResponse] = useState<any>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+    const [showMobileDetails, setShowMobileDetails] = useState(false);
 
     const serviceTypes = useSelector(selectServiceTypes);
 
@@ -44,16 +45,21 @@ export default function Find() {
     useEffect(() => {
         if (appointmentId) {
             const fetchAppointment = async () => {
-                try {
-                    const response = await appointmentsService.getAppointmentById(appointmentId);
+                const authToken = localStorage.getItem("authToken");
+
+                // If user is not logged in, call the specific doctor response API
+                if (!authToken) {
+                    const response = await appointmentsService.getDoctorResponse(appointmentId);
                     if (response.success) {
-                        setAppointment(response.data);
-                        console.log(response);
-                        const normalizedDoctors = response.data.respondedDoctors.map((doctor: any, index: number) => ({
-                            ...doctor,
-                            doctor: doctor.doctor || doctor.doctorId,
+                        const { responses, appointmentDetails } = response.data;
+                        
+                        setAppointment(appointmentDetails || {});
+
+                        const normalizedDoctors = responses.map((docResponse: any) => ({
+                            ...docResponse,
+                            doctor: docResponse.doctorId
                         }));
-                        normalizedDoctors.forEach((doctor: any) => delete doctor.doctorId);
+
                         setRespondedDoctors(normalizedDoctors);
 
                         if (responseId) {
@@ -62,11 +68,45 @@ export default function Find() {
                             );
                             if (matchingResponse) {
                                 setSelectedResponse(matchingResponse);
+                                setShowMobileDetails(true);
                             }
                         }
+                        
                     } else {
-                        console.error("Failed to fetch appointment", response.message);
+                        console.error("Failed to fetch doctor response", response.message);
                     }
+                    return;
+                }
+                try {
+                    // Check if user is logged in
+                    if (authToken) {
+                        // Regular flow for logged-in users
+                        const response = await appointmentsService.getAppointmentById(appointmentId);
+                        if (response.success) {
+                            setAppointment(response.data);
+                            console.log(response);
+                            const normalizedDoctors = response.data.respondedDoctors.map((doctor: any, index: number) => ({
+                                ...doctor,
+                                doctor: doctor.doctor || doctor.doctorId,
+                            }));
+                            normalizedDoctors.forEach((doctor: any) => delete doctor.doctorId);
+                            setRespondedDoctors(normalizedDoctors);
+
+                            if (responseId) {
+                                const matchingResponse = normalizedDoctors.find(
+                                    (response: any) => response._id === responseId
+                                );
+                                if (matchingResponse) {
+                                    setSelectedResponse(matchingResponse);
+                                    // For responseId in URL, show details on mobile
+                                    setShowMobileDetails(true);
+                                }
+                            }
+                        } else {
+                            console.error("Failed to fetch appointment", response.message);
+                        }
+                    }
+
                 } catch (err) {
                     console.error("Error fetching appointment", err);
                 }
@@ -140,6 +180,16 @@ export default function Find() {
             return;
         }
 
+        const authToken = localStorage.getItem("authToken");
+        
+        if (!authToken) {
+            showToast.error('Please login to continue');
+            const currentUrl = window.location.href;
+            const loginUrl = `/login?from=${encodeURIComponent(currentUrl)}&responseId=${selectedResponse._id}`;
+            router.push(loginUrl);
+            return;
+        }
+
         const response = {
             ...selectedResponse,
             doctor: selectedResponse.doctor || selectedResponse.doctorId,
@@ -164,6 +214,13 @@ export default function Find() {
     // Modify the setSelectedResponse to use normalized data
     const handleSelectResponse = (item: any) => {
         setSelectedResponse(normalizeDoctorData(item));
+        // On mobile, show details and hide the list
+        setShowMobileDetails(true);
+    };
+
+    // Function to go back to list view on mobile
+    const handleBackToList = () => {
+        setShowMobileDetails(false);
     };
 
     const handlePrevReviews = () => {
@@ -201,10 +258,12 @@ export default function Find() {
                         </div>
                     ) : (
                         <div className={`grid ${responseId ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
-                            {/* Left side: Doctor Responses List - Only show if no responseId */}
-                            {!responseId && (
-                                <div className="col-span-1 p-6 bg-white max-h-[calc(100vh-200px)] overflow-y-auto relative after:content-[''] after:absolute after:right-0 after:top-4 after:bottom-4 after:w-[1px] after:bg-[#9904A1]/20">
-                                    <h2 className="text-lg font-semibold text-[#9904A1] mb-4 text-center tracking-wide">Doctor Responses</h2>
+                            {/* Left side: Doctor Responses List - Show on desktop or mobile list view */}
+                            {(!responseId || (responseId && !showMobileDetails)) && (
+                                <div className={`col-span-1 p-6 bg-white max-h-[calc(100vh-200px)] overflow-y-auto relative after:content-[''] after:absolute after:right-0 after:top-4 after:bottom-4 after:w-[1px] after:bg-[#9904A1]/20 ${
+                                    showMobileDetails ? 'hidden md:block' : 'block'
+                                }`}>
+                                    <h2 className="text-lg font-semibold text-[#9904A1] my-6 text-center tracking-wide">Doctor Responses</h2>
 
                                     {respondedDoctors.map((item, index) => {
                                         const reviews = item.doctor?.latestReviews || [];
@@ -230,7 +289,7 @@ export default function Find() {
                                                                 {[...Array(5)].map((_, i) => (
                                                                     <svg
                                                                         key={i}
-                                                                        className={`w-4 h-4 ${i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                                        className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
                                                                         fill="currentColor"
                                                                         viewBox="0 0 20 20"
                                                                     >
@@ -255,12 +314,27 @@ export default function Find() {
                                 </div>
                             )}
 
-                            {/* Right side: Selected Response Details */}
-                            <div className="col-span-2 p-8 bg-white flex flex-col justify-center items-center">
+                            {/* Right side: Selected Response Details - Show on desktop or mobile details view */}
+                            <div className={`col-span-2 p-8 bg-white flex flex-col justify-center items-center ${
+                                showMobileDetails ? 'block' : 'hidden md:block'
+                            }`}>
+                                {/* Mobile Back Button */}
+                                {(showMobileDetails ) && (
+                                    <div className="w-full my-6 md:hidden">
+                                        <button
+                                            onClick={handleBackToList}
+                                            className="flex items-center gap-2 text-[#9904A1] hover:text-[#7e0487] transition-colors"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                            <span className="font-medium">Back to Responses</span>
+                                        </button>
+                                    </div>
+                                )}
+                                
                                 <h2 className="text-xl font-semibold text-[#9904A1] mb-8 text-center tracking-wide sticky top-0 bg-white z-10">Response Details</h2>
 
                                 {selectedResponse ? (
-                                    <div className={`space-y-6 pr-4 ${responseId ? 'w-[80%]' : ''}`}>
+                                    <div className={`space-y-6 pr-4 ${responseId ? 'md:w-[80%]' : ''}`}>
                                         {/* Doctor Info */}
                                         <div className="bg-white shadow-md border border-gray-200 rounded-2xl">
                                             <h2 className="text-lg bg-[#faf8fc] font-semibold text-[#9904A1] mb-2 border-b border-gray-200 py-2 px-5 rounded-t-2xl ">Doctor Details</h2>
@@ -272,14 +346,14 @@ export default function Find() {
                                                         : 0;
                                                     return (
                                                         <>
-                                                            <div className="flex items-center justify-between mb-4">
-                                                                <p className="text-gray-700"><span className="font-medium">Name:</span> Dr. {selectedResponse.doctor?.firstName} {selectedResponse.doctor?.lastName}</p>
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="flex items-center">
+                                                            <div className="flex sm:items-center sm:justify-between gap-2 mb-4">
+                                                                <p className="text-gray-700 flex-shrink-0"><span className="font-medium">Name:</span> Dr. {selectedResponse.doctor?.firstName} {selectedResponse.doctor?.lastName}</p>
+                                                                <div className="flex lg:flex-row flex-col items-center self-start sm:self-center gap-2 lg:w-auto w-full justify-end">
+                                                                    <div className="flex items-center w-full justify-end">
                                                                         {[...Array(5)].map((_, index) => (
                                                                             <svg
                                                                                 key={index}
-                                                                                className={`w-5 h-5 ${index < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                                                className={`w-4 h-4 sm:w-5 sm:h-5 ${index < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
                                                                                 fill="currentColor"
                                                                                 viewBox="0 0 20 20"
                                                                             >
@@ -287,7 +361,7 @@ export default function Find() {
                                                                             </svg>
                                                                         ))}
                                                                     </div>
-                                                                    <span className="text-sm text-gray-600">{averageRating.toFixed(1)} ({reviews.length} reviews)</span>
+                                                                    <span className="text-sm text-gray-600 w-full text-end">{averageRating.toFixed(1)} ({reviews.length} reviews)</span>
                                                                 </div>
                                                             </div>
                                                             <div className="mt-4">
@@ -296,20 +370,20 @@ export default function Find() {
                                                                         <h3 className="text-md font-semibold text-gray-800 mb-4">Recent Reviews</h3>
                                                                         <div className="relative">
                                                                             <div className="flex items-center">
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={handlePrevReviews}
                                                                                     disabled={currentReviewIndex === 0}
                                                                                     className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                                                                 >
                                                                                     <ChevronLeft className="w-6 h-6 text-gray-600" />
                                                                                 </button>
-                                                                                
+
                                                                                 <div className="flex-1 overflow-hidden">
-                                                                                    <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${currentReviewIndex * (100/3)}%)` }}>
+                                                                                    <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${currentReviewIndex * (100 / 3)}%)` }}>
                                                                                         {reviews.map((review: any) => (
-                                                                                            <div 
-                                                                                                key={review._id} 
-                                                                                                className="w-1/3 flex-shrink-0 px-2"
+                                                                                            <div
+                                                                                                key={review._id}
+                                                                                                className="flex-shrink-0 px-2 w-full sm:w-1/2 lg:w-1/3"
                                                                                             >
                                                                                                 <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm h-full">
                                                                                                     <div className="flex items-center gap-2 mb-2">
@@ -317,7 +391,7 @@ export default function Find() {
                                                                                                             {[...Array(5)].map((_, i) => (
                                                                                                                 <svg
                                                                                                                     key={i}
-                                                                                                                    className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                                                                                    className={`w-3 h-3 sm:w-4 sm:h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
                                                                                                                     fill="currentColor"
                                                                                                                     viewBox="0 0 20 20"
                                                                                                                 >
@@ -334,7 +408,7 @@ export default function Find() {
                                                                                     </div>
                                                                                 </div>
 
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={handleNextReviews}
                                                                                     disabled={currentReviewIndex >= reviews.length - 3}
                                                                                     className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"

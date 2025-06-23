@@ -1003,7 +1003,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                     </div>
                                 </div> */}
 
-                                <p className="mt-2 text-center !text-[14px] text-black">
+                                {/* <p className="mt-2 text-center !text-[14px] text-black">
                                     Already have an account?{" "}
                                     <Link
                                         href="/login"
@@ -1011,7 +1011,7 @@ export default function DoctorSignUp({ onSubmit, isLoading }: DoctorSignUp) {
                                     >
                                         Sign in
                                     </Link>
-                                </p>
+                                </p> */}
                             </form>
                         </div>
                     </div>

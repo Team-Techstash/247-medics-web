@@ -149,6 +149,13 @@ export const appointmentsService = {
       method: "GET",
     });
   },
+
+  getDoctorResponse: async (appointmentId: string): Promise<any> => {
+    return apiCall(APPOINTMENTS_ROUTES.GET_DOCTOR_RESPONSES(appointmentId), {
+      method: "GET",
+    });
+  },
+
   //    getById: async (id: string): Promise<any> => {
   //     const token = localStorage.getItem("authToken");
   //     const endpoint = `${APPOINTMENTS_ROUTES.GET_APPOINTMENT_BY_ID}${id}`;
