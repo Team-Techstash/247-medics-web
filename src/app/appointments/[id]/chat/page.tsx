@@ -45,6 +45,8 @@ export default function DoctorAppointmentReviewPage() {
   const serviceTypes = useSelector(selectServiceTypes);
   const referencesLoading = useSelector(selectReferencesLoading);
 
+  const bottomRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     dispatch(fetchReferences());
   }, [dispatch]);
@@ -147,6 +149,13 @@ export default function DoctorAppointmentReviewPage() {
       websocketService.joinChat(chatId);
     }
   }, [wsConnected, chatId]);
+
+  // Scroll to bottom
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !appointment || !chatId) return;
@@ -298,7 +307,7 @@ export default function DoctorAppointmentReviewPage() {
                   </div>
                 </div>
             </div>
-            
+
             {/* Messaging Section */}
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
@@ -343,6 +352,7 @@ export default function DoctorAppointmentReviewPage() {
                     </div>
                   ))
                 )}
+                 <div ref={bottomRef} />
               </div>
               <div className="mt-4 flex gap-2">
                 <input
