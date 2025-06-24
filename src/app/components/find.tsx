@@ -60,6 +60,8 @@ export default function Find() {
                             doctor: docResponse.doctorId
                         }));
 
+                        normalizedDoctors.reverse();
+
                         setRespondedDoctors(normalizedDoctors);
 
                         if (responseId) {
@@ -90,6 +92,7 @@ export default function Find() {
                                 doctor: doctor.doctor || doctor.doctorId,
                             }));
                             normalizedDoctors.forEach((doctor: any) => delete doctor.doctorId);
+                            normalizedDoctors.reverse();
                             setRespondedDoctors(normalizedDoctors);
 
                             if (responseId) {
@@ -334,7 +337,7 @@ export default function Find() {
                                 <h2 className="text-xl font-semibold text-[#9904A1] mb-8 text-center tracking-wide sticky top-0 bg-white z-10">Response Details</h2>
 
                                 {selectedResponse ? (
-                                    <div className={`space-y-6 pr-4 ${responseId ? 'md:w-[80%]' : ''}`}>
+                                    <div className="space-y-6 pr-4">
                                         {/* Doctor Info */}
                                         <div className="bg-white shadow-md border border-gray-200 rounded-2xl">
                                             <h2 className="text-lg bg-[#faf8fc] font-semibold text-[#9904A1] mb-2 border-b border-gray-200 py-2 px-5 rounded-t-2xl ">Doctor Details</h2>
