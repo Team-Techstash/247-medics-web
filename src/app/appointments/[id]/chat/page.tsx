@@ -40,6 +40,7 @@ export default function DoctorAppointmentReviewPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [chatId, setChatId] = useState<string | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
+  const [hasInitialScroll, setHasInitialScroll] = useState(false);
 
   // Get reference data from Redux
   const serviceTypes = useSelector(selectServiceTypes);
@@ -152,10 +153,11 @@ export default function DoctorAppointmentReviewPage() {
 
   // Scroll to bottom
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (bottomRef.current && !hasInitialScroll) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setHasInitialScroll(true);
     }
-  }, [messages]);
+  }, [messages, hasInitialScroll]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !appointment || !chatId) return;
@@ -304,6 +306,7 @@ export default function DoctorAppointmentReviewPage() {
                         Please remember to collect the invoice from the doctor
                       </p>
                     </div>
+                    <div ref={bottomRef} />
                   </div>
                 </div>
             </div>
@@ -352,7 +355,6 @@ export default function DoctorAppointmentReviewPage() {
                     </div>
                   ))
                 )}
-                 <div ref={bottomRef} />
               </div>
               <div className="mt-4 flex gap-2">
                 <input
