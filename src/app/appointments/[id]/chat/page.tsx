@@ -159,6 +159,17 @@ export default function DoctorAppointmentReviewPage() {
     }
   }, [messages, hasInitialScroll]);
 
+  useEffect(() => {
+    if (messages.length > 0 && !loading) {
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          const container = messagesContainerRef.current;
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 100);
+    }
+  }, [messages, loading]);
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !appointment || !chatId) return;
     
