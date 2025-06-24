@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '@/redux/store';
+import { fetchReferences, selectAppointmentStatuses, selectPaymentStatuses } from '@/redux/slices/referenceSlice';
 import { appointmentsService } from '@/api/services/service';
 import Header from './Header';
 import Footer from './Footer';
@@ -38,6 +41,7 @@ type TabType = 'upcoming' | 'completed';
 
 export default function PatientAppointmentList() {
     const router = useRouter();
+    const dispatch = useDispatch<AppDispatch>();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<TabType>('upcoming');
@@ -47,6 +51,23 @@ export default function PatientAppointmentList() {
     const [page, setPage] = useState(1);
     const rowsPerPage = 10;
 
+    // Redux selectors for reference data
+    const appointmentStatuses = useSelector(selectAppointmentStatuses);
+    const paymentStatuses = useSelector(selectPaymentStatuses);
+
+    // Helper functions to get status names
+    const getStatusName = (code: string) => {
+        if (!code || !appointmentStatuses) return code;
+        const status = Object.values(appointmentStatuses).find(item => item.code === code);
+        return status ? status.name : code;
+    };
+
+    const getPaymentStatusName = (code: string | undefined) => {
+        if (!code || !paymentStatuses) return code || 'pending';
+        const status = Object.values(paymentStatuses).find(item => item.code === code);
+        return status ? status.name : code;
+    };
+
     // Function to extract meeting code from patientMeetingUrl
     const extractMeetingCode = (url: string): string => {
         if (!url) return '';
@@ -55,6 +76,7 @@ export default function PatientAppointmentList() {
     };
 
     useEffect(() => {
+        dispatch(fetchReferences());
         fetchAppointments();
         // eslint-disable-next-line
     }, [dateFilter]);
@@ -260,12 +282,12 @@ export default function PatientAppointmentList() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(appointment.status)}`}>
-                                                    {appointment.status}
+                                                    {getStatusName(appointment.status)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusBadge(appointment.paymentStatus)}`}>
-                                                    {appointment.paymentStatus || 'pending'}
+                                                    {getPaymentStatusName(appointment.paymentStatus)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
