@@ -46,8 +46,6 @@ export default function DoctorAppointmentReviewPage() {
   const serviceTypes = useSelector(selectServiceTypes);
   const referencesLoading = useSelector(selectReferencesLoading);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     dispatch(fetchReferences());
   }, [dispatch]);
@@ -152,13 +150,6 @@ export default function DoctorAppointmentReviewPage() {
   }, [wsConnected, chatId]);
 
   // Scroll to bottom
-  useEffect(() => {
-    if (bottomRef.current && !hasInitialScroll) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setHasInitialScroll(true);
-    }
-  }, [messages, hasInitialScroll]);
-
   useEffect(() => {
     if (messages.length > 0 && !loading) {
       setTimeout(() => {
@@ -317,7 +308,6 @@ export default function DoctorAppointmentReviewPage() {
                         Please remember to collect the invoice from the doctor
                       </p>
                     </div>
-                    <div ref={bottomRef} />
                   </div>
                 </div>
             </div>
