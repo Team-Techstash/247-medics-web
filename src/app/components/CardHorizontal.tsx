@@ -122,7 +122,7 @@ const CardHorizontal = () => {
                     </motion.div>
                 </div>
                 <div className="text-center">
-                    <Button2 text="See a doctor" href="/appointment" />
+                    <Button2 text="See a doctor" href="/create-appointment" />
                 </div>
             </div>
         </section>

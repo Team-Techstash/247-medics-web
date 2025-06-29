@@ -8,10 +8,11 @@ const conditions = [
     "Doctors in Europe",
     "Doctors in Turkey",
     "Doctors in United Kingdom",
-    "",
+    "Doctors in South Africa",
     "Doctors in Vietnam",
     "Doctors in Thailand",
-    "",
+    "Doctors in Canada",
+    "Doctors in UAE",
     "Doctors in Mexico",
     "Doctors in Brazil",
 ];

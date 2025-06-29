@@ -63,7 +63,7 @@ const BulletSection = () => {
 
                         {/* CTA Button */}
                         <div className="text-center lg:text-start mt-8">
-                            <Button2 text="Start a Treatment" href="/appointment" />
+                            <Button2 text="Start a Treatment" href="/create-appointment" />
                         </div>
                     </motion.div>
                 </div>

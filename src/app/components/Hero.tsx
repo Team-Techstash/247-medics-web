@@ -34,10 +34,10 @@ const Hero = () => {
                                 24/7 Medics <br className="hidden md:block" /> Care Anywhere, <br /> Anytime!
                             </h1>
                             <p className="mt-3 mb-10 text-primary max-w-150">
-                                Providing innovative medical services and solutions to healthcare
-                                professionals and patients worldwide.
+                                Your health, your time, your comfort—on your terms.
+                                We bring expert medical care to your fingertips. Whether it’s a quick consultation, follow-up care, or ongoing support, our licensed doctors and specialists are here for you — anytime, anywhere.
                             </p>
-                            <Button2 text="Find a treatment" href="/appointment" />
+                            <Button2 text="Speak to a doctor now" href="/create-appointment" />
 
                             <div className="mt-6 text-center md:text-start">
                                 <Image src="/images/trustpilot2.png" alt="Trustpilot" width={200} height={100} className="w-40 inline-block xl:w-52" />
@@ -76,7 +76,7 @@ const Hero = () => {
                     />
                     <div className="text-primary">
                         <h3 className="text-lg md:text-2xl 2xl:text-4xl font-bold">+75%</h3>
-                        <p className="text-sm md:text-md">medical services and <br/>solutions to healthcare</p>
+                        <p className="text-sm md:text-md">medical services and <br />solutions to healthcare</p>
                     </div>
                 </motion.div>
                 <motion.div

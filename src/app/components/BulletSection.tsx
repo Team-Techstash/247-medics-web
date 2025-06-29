@@ -5,22 +5,22 @@ import Image from "next/image";
 import Button2 from "./Button2";
 
 const conditions = [
-    "Cough, cold, fever",
-    "Urinary tract infections (UTI)",
-    "Food poisoning, diarrhea",
-    "Pink eye",
-    "Sore throat, strep throat",
-    "Sinus infections",
-    "Vaginal yeast infections",
-    "Bacterial Vaginosis (BV)",
-    "Rash and eczema",
-    "Bug bites, skin infections",
-    "Asthma",
     "Acid reflux (GERD)",
     "Acne",
-    "ED",
-    "Genital Herpes",
+    "Asthma",
+    "Bacterial Vaginosis (BV)",
+    "Bug bites, skin infections",
     "Cold sores",
+    "Cough, cold, fever",
+    "ED",
+    "Food poisoning, diarrhea",
+    "Genital Herpes",
+    "Pink eye",
+    "Rash and eczema",
+    "Sinus infections",
+    "Sore throat, strep throat",
+    "Urinary tract infections (UTI)",
+    "Vaginal yeast infections",
 ];
 
 const BulletSection = () => {
@@ -37,7 +37,7 @@ const BulletSection = () => {
                     >
                         <div className="xl:w-3/4">
                             <h2 className="text-2xl md:text-4xl 2xl:text-6xl font-medium text-primary mb-3">
-                                Some Conditions br We Treat Online
+                            What we treat
                             </h2>
                             <p className="mt-3 text-lg text-primary mb-5 md:text-lg">
                                 Get treatment for a range of symptoms and conditions right from your smartphone.

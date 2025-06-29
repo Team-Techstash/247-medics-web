@@ -15,7 +15,7 @@ const CTA2 = () => {
                         >
                             <div className="text-white">
                                 <h2 className="text-2xl md:text-4xl 2xl:text-5xl font-medium mb-3">
-                                    Real doctors, real fast
+                                Specialists Doctors available round the clock. 
                                 </h2>
                                 <p className="mt-3 md:text-lg">
                                     A friendlier healthcare experience. Stress-free, simple, with clear and affordable prices.
@@ -31,19 +31,19 @@ const CTA2 = () => {
                         >
                             <div className="grid sm:grid-cols-3 gap-12 items-center">
                                 <div className="text-white text-center">
-                                    <div className="mb-2 text-sm">Video Visit with a Doctor</div>
-                                    <h4 className="text-2xl md:text-4xl 2xl:text-6xl font-medium mb-0 md:mb-3">€20</h4>
+                                    <div className="mb-2 text-sm">E-consultations from</div>
+                                    <h4 className="text-2xl md:text-4xl 2xl:text-6xl font-medium mb-0 md:mb-3">£ 25</h4>
                                     <p className="text-sm md:text-lg">Starting from</p>
                                 </div>
                                 <div className="text-white text-lg text-center">
                                     <div className="mb-2 text-sm">Response time</div>
                                     <h4 className="text-2xl md:text-4xl 2xl:text-6xl font-medium mb-0 md:mb-3">5 mins</h4>
-                                    <p className="text-sm md:text-lg">For urgent care online</p>
+                                    {/* <p className="text-sm md:text-lg">For urgent care online</p> */}
                                 </div>
                                 <div className="text-white text-lg text-center">
                                     <div className="mb-2 text-sm">Availability</div>
                                     <h4 className="text-2xl md:text-4xl 2xl:text-6xl font-medium mb-0 md:mb-3">24/7</h4>
-                                    <p className="text-sm md:text-lg">For urgent care online</p>
+                                    {/* <p className="text-sm md:text-lg">For urgent care online</p> */}
                                 </div>
                             </div>
                         </motion.div>

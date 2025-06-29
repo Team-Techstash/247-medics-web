@@ -54,7 +54,7 @@ const HeroHowItWorks = () => {
                                         </Link>
                                     </div>
                                     <div className="flex items-center justify-between px-5 md:px-10 py-3">
-                                        <p><strong>Set up an appointment</strong> - for non urgent needs</p>
+                                        <p><strong>Schedule an appointment</strong> - for non urgent needs</p>
                                         <Link href={''}>
                                             <Image
                                                 src="/images/question.svg"

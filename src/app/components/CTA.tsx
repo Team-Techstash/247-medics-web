@@ -14,7 +14,7 @@ export default function CTA() {
                 className="bg-secondary text-white py-10 px-6 rounded-2xl">
                 <div className="container mx-auto text-center">
                     <h1 className="text-2xl md:text-4xl 2xl:text-6xl font-medium mb-6">Ready to speak with a doctor?</h1>
-                    <Button text="Find a treatment" href="/appointment" />
+                    <Button text="Find a treatment" href="/create-appointment" />
                 </div>
             </motion.div>
         </div>
